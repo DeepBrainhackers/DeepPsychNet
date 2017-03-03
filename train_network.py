@@ -3,6 +3,7 @@ import tensorflow as tf
 from deepPsychNet import DeepPsychNet
 import h5py
 import numpy as np
+from sys import stdout
 
 
 def create_train_validation_test_set(data, y, num_test=100, num_valid=100):
@@ -25,11 +26,14 @@ def evaluate(data, y_data, id_to_take, network, batch_size=25):
     accuracy_batches = np.zeros(num_batches)
 
     for i_batch, offset in enumerate(xrange(0, num_examples, batch_size)):
+        stdout.write('/r {}/{}'.format(i_batch + 1, num_batches))
+        stdout.flush()
         end = np.minimum(offset+batch_size, num_examples)
         id_minibatch = id_to_take[offset:end]
         batch_x, batch_y = data[id_minibatch, :, :, :, :], y_data[id_minibatch]
         accuracy = sess.run(network.get_performance(), feed_dict={network.input: batch_x, network.label: batch_y})
         accuracy_batches[i_batch] = accuracy
+    print
     return accuracy_batches
 
 
@@ -58,7 +62,9 @@ def train_network(data, y, id_train, id_valid, id_test, network, save_path, batc
             # will shuffle the indices of the training data INPLACE (i.e. id_train changed)
             np.random.shuffle(id_train)
 
-            for offset in xrange(0, num_train_examples, batch_size):
+            for id_batch, offset in enumerate(xrange(0, num_train_examples, batch_size)):
+                stdout.write('/r {}/{}'.format(id_batch + 1, num_batches_train))
+                stdout.flush()
                 end = np.minimum(offset + batch_size, num_train_examples)
                 id_minibatch = id_train[offset:end]
                 id_minibatch = np.sort(id_minibatch)
@@ -71,6 +77,7 @@ def train_network(data, y, id_train, id_valid, id_test, network, save_path, batc
             accuracy_test[:, id_epoch] = evaluate(data, y, id_test, network, batch_size=batch_size)
 
             # print("EPOCH {} ...".format(i+1))
+            print
             print "EPOCH {}/{}: Training Acc: {:.3f}; Validation Acc = {:.3f}; Test Acc = {:.3f}".format(id_epoch + 1,
                                                                                                          num_epochs,
                                                                                                          accuracy_train[:, id_epoch].mean(),
@@ -103,7 +110,7 @@ def init_network(batch_size):
                    {'shape': (5, 5, 5, 6, 16),
                     'strides': (1, 2, 2, 2, 1)}
                    ]
-    max_pool_params = [{'ksize':(1, 2, 2, 2, 1),
+    max_pool_params = [{'ksize': (1, 2, 2, 2, 1),
                         'strides': (1, 2, 2, 2, 1)},
                        {'ksize': (1, 2, 2, 2, 1),
                         'strides': (1, 2, 2, 2, 1)}
@@ -122,5 +129,5 @@ def init_network(batch_size):
 if __name__ == '__main__':
     hdf5_file = '/media/paul/kaggle/dataHDF5/abide.hdf5'
     save_path = '/media/paul/kaggle/dataHDF5/DeepPsychNet'
-    batch_size = 25
+    batch_size = 2
     iterate_and_train(hdf5_file_path=hdf5_file, save_path=save_path, batch_size=batch_size)
