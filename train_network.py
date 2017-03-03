@@ -81,8 +81,8 @@ def train_network(data, y, id_train, id_valid, id_test, network, save_path, batc
         print 'Model saved!'
 
 
-def iterate_and_train(hdf5_file_path, save_path):
-    network = init_network()
+def iterate_and_train(hdf5_file_path, save_path, batch_size=25):
+    network = init_network(batch_size)
 
     with h5py.File(hdf5_file_path, 'r') as hdf5_file:
         dataT1 = hdf5_file['dataT1']
@@ -90,12 +90,12 @@ def iterate_and_train(hdf5_file_path, save_path):
         id_subj = np.arange(dataT1.shape[0])
         id_train, id_valid, id_test = create_train_validation_test_set(id_subj, y_labels, num_test=100, num_valid=100)
         train_network(dataT1, y_labels, id_train, id_valid, id_test, network, save_path,
-                      batch_size=25, num_epochs=20)
+                      batch_size=batch_size, num_epochs=20)
 
 
-def init_network():
+def init_network(batch_size):
     n_classes = 2
-    batch_size = 25
+    batch_size = batch_size
     nx, ny, nz = 91, 109, 91
 
     conv_params = [{'shape': (8, 8, 8, 1, 6),
@@ -122,4 +122,5 @@ def init_network():
 if __name__ == '__main__':
     hdf5_file = '/media/paul/kaggle/dataHDF5/abide.hdf5'
     save_path = '/media/paul/kaggle/dataHDF5/DeepPsychNet'
-    iterate_and_train(hdf5_file_path=hdf5_file, save_path=save_path)
+    batch_size = 25
+    iterate_and_train(hdf5_file_path=hdf5_file, save_path=save_path, batch_size=batch_size)
