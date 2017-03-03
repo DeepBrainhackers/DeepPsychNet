@@ -33,8 +33,8 @@ class DeepPsychNet(object):
 
         self.network = self.initialize_network()
 
-        one_hot_y_encoding = self.get_hot_encoding()
-        self.cost_function = self.get_cost_function(one_hot_y_encoding)
+        self.one_hot_y_encoding = self.get_hot_encoding()
+        self.cost_function = self.get_cost_function(self.one_hot_y_encoding)
 
     def initialize_network(self):
 
@@ -94,6 +94,10 @@ class DeepPsychNet(object):
     def get_training_function(self, learning_rate=0.001):
         optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
         return optimizer.minimize(self.cost_function)
+
+    def get_performance(self):
+        correct_prediction = tf.equal(tf.argmax(self.network, 1), tf.argmax(self.one_hot_y_encoding, 1))
+        return tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
 
 if __name__ == '__main__':
