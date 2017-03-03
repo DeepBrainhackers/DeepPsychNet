@@ -36,7 +36,7 @@ class DeepPsychNet(object):
         self.network = self.initialize_network()
 
         self.one_hot_y_encoding = self.get_hot_encoding()
-        self.cost_function = self.get_cost_function(self.one_hot_y_encoding)
+        self.cost_function = self.get_cost_function()
 
     def initialize_network(self):
 
@@ -92,8 +92,8 @@ class DeepPsychNet(object):
 
         return output_network
 
-    def get_cost_function(self, labels):
-        cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=self.network, labels=labels)
+    def get_cost_function(self):
+        cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=self.network, labels=self.one_hot_y_encoding)
         return tf.reduce_mean(cross_entropy)
 
     def get_hot_encoding(self):
