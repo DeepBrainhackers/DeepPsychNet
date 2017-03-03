@@ -14,7 +14,8 @@ class DeepPsychNet(object):
         :param init_mu: set to 0.
         :param init_sigma: set 0.1
         """
-        assert len(conv_layers_params) == len(max_pool_layers_params), 'Expects same number of convolutional/max-pooling layers'
+        assert len(conv_layers_params) == len(max_pool_layers_params), 'Expects same number of ' \
+                                                                       'convolutional/max-pooling layers'
 
         self.input = X
         self.label = y
@@ -30,6 +31,7 @@ class DeepPsychNet(object):
         self.fc_params = fc_layers_params
         self.num_layers_fc = len(fc_layers_params)
         self.num_layers = self.num_layers_conv + self.num_layers_fc
+        self.variable_list = []
 
         self.network = self.initialize_network()
 
@@ -54,6 +56,9 @@ class DeepPsychNet(object):
                                                      mean=self.init_mu,
                                                      stddev=self.init_sigma))
             conv_b = tf.Variable(tf.zeros(shape_conv_layer[-1]))
+            self.variable_list += [conv_W]
+            self.variable_list += [conv_b]
+
             conv = tf.nn.conv3d(input_to_layer, conv_W, strides=stride_conv_layer, padding='VALID') + conv_b
 
             # Activation.
@@ -74,6 +79,9 @@ class DeepPsychNet(object):
             # Layer 3: Fully Connected. Input = previous. Output = 120.
             fc_W = tf.Variable(tf.truncated_normal(shape=shape_layer, mean=self.init_mu, stddev=self.init_sigma))
             fc_b = tf.Variable(tf.zeros(shape_layer[-1]))
+            self.variable_list += [fc_W]
+            self.variable_list += [fc_b]
+
             fc = tf.matmul(input_to_layer, fc_W) + fc_b
 
             # Activation.
@@ -110,7 +118,7 @@ if __name__ == '__main__':
                    {'shape': (5, 5, 5, 6, 16),
                     'strides': (1, 2, 2, 2, 1)}
                    ]
-    max_pool_params = [{'ksize':(1, 2, 2, 2, 1),
+    max_pool_params = [{'ksize': (1, 2, 2, 2, 1),
                         'strides': (1, 2, 2, 2, 1)},
                        {'ksize': (1, 2, 2, 2, 1),
                         'strides': (1, 2, 2, 2, 1)}
