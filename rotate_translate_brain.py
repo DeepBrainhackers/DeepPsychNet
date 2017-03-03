@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Spyder Editor
-
-This is a temporary script file.
+Functions to rotate and translate 3d matrices
 """
 
 import nibabel as nib
