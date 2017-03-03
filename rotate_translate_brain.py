@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Spyder Editor
-
-This is a temporary script file.
+Functions to rotate and translate 3d matrices
 """
 
 import nibabel as nib
@@ -27,11 +25,18 @@ def rotate_brain(image_data, angle, axis):
     return rotated_data
 
 
-def shift_brain(3d_image_data, angle, axis):
+def shift_brain(image_data, translation):
+    """translation should include one value for each axis like [x, y, z]
+    
+    
+    """
+        
+    shifted_data = scipy.ndimage.interpolation.shift(image_data,shift=translation,order=0)
     
     
     
-    pass
+    
+    return shifted_data
 
 
 if __name__ == "main":
@@ -45,11 +50,14 @@ if __name__ == "main":
 
     rotated_brain = rotate_brain(image_data,angle=30,axis=0)
     
+    shifted_brain = shift_brain(rotated_brain,[0, 0, -30])
+    
+    
     
     plt.figure()
     plt.imshow(image_data[100,:,:],interpolation='none')
     plt.show()
     
     plt.figure()
-    plt.imshow(rotated_brain[100,:,:],interpolation='none')
+    plt.imshow(shifted_brain[100,:,:],interpolation='none')
     plt.show()
