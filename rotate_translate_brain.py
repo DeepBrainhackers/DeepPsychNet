@@ -57,18 +57,19 @@ def shift_brain(image_data, shift, axis,affine_matrix):
         y = 0
         z = shift
     
-    translation = np.array([[1,0,0,-x],[0,1,0,-y],[0,0,1,-z]])
+    translation = np.array([[1,0,0,-x],[0,1,0,-y],[0,0,1,-z],[0,0,0,1]])
 
     new_affine = np.dot(affine_matrix,translation)
     
     #offset in the center
     center = 0.5*np.array(image_data.shape)
-    offset = center - center.dot(new_affine[:3,:3])  
+    trans = [-x,-y,-z]
+    offset = trans+center - center.dot(new_affine[:3,:3])  
     
     translation_data = affine_transform(image_data,new_affine[0:3,0:3:].T,
                                     offset=offset,order=0)
     
-    pass
+    return translation_data, new_affine
 
 
 if __name__ == "main":
@@ -79,9 +80,10 @@ if __name__ == "main":
     
     image_data = image.get_data()
 
-    angle =20
-    axis =3
-    rotated_brain, new_affine = rotate_brain(image_data,angle,axis,
+    angle =50
+    axis =1
+    shift = -50
+    translated_brain, new_affine = shift_brain(image_data,shift,axis,
                                              affine_matrix = image.affine)
     
     
@@ -90,5 +92,5 @@ if __name__ == "main":
     plt.show()
     
     plt.figure()
-    plt.imshow(rotated_brain[100,:,:],interpolation='none')
+    plt.imshow(translated_brain[100,:,:],interpolation='none')
     plt.show()
