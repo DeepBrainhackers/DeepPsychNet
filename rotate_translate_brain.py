@@ -1,42 +1,74 @@
 # -*- coding: utf-8 -*-
 """
-Functions to rotate and translate 3d matrices
+Spyder Editor
+
+This is a temporary script file.
 """
 
 import nibabel as nib
 import numpy as np
-import scipy
+import math
+from scipy.ndimage.interpolation import affine_transform
 
-def rotate_brain(image_data, angle, axis):
+def rotate_brain(image_data, angle, axis, affine_matrix):
     """
     image_data is a 3dimensionl numpy array
     angle is the rotation angle in degrees
     axis is the rotation axis 0,1 or 2"""
     
+    angle = math.radians(angle)
+    if axis == 1:
+        rotation = np.array([[1,0,0,0], [0,math.cos(angle),-1*math.sin(angle),0],
+             [0, math.sin(angle),math.cos(angle),0],
+              [0,0,0,1]])
+    elif axis==2:
+        rotation = np.array([[math.cos(angle),0,math.sin(angle),0],[0,1,0,0],
+             [-1*math.sin(angle),0,math.cos(angle),0],[0,0,0,1]])
+    elif axis==3: 
+        rotation = np.array([[math.cos(angle),-1*math.sin(angle),0,0],
+                 [math.sin(angle),math.cos(angle),0,0],
+             [0,0,1,0],
+              [0,0,0,1]])
     
+    new_affine = np.dot(affine_matrix,rotation)    
     
-    all_axes = {0: (1,2), 1: (0,2), 2: (0,1)}    
-    
-    rotated_data = scipy.ndimage.interpolation.rotate(image_data,angle,
-                                                      all_axes[axis],
-                                             reshape=False, order=0)
+    #offset in the center
+    center = 0.5*np.array(image_data.shape)
+    offset = center - center.dot(new_affine[:3,:3])        
+    rotated_data = affine_transform(image_data,new_affine[0:3,0:3:].T,
+                                    offset=offset,order=0)
 
     
-    return rotated_data
+    return rotated_data, new_affine
 
 
-def shift_brain(image_data, translation):
-    """translation should include one value for each axis like [x, y, z]
+def shift_brain(image_data, shift, axis,affine_matrix):
     
+    if axis==1:
+        x = shift
+        y = 0
+        z =0
+    elif axis==2:
+        x = 0
+        y = shift
+        z =0
+    elif axis ==3:
+        x = 0
+        y = 0
+        z = shift
     
-    """
-        
-    shifted_data = scipy.ndimage.interpolation.shift(image_data,shift=translation,order=0)
+    translation = np.array([[1,0,0,-x],[0,1,0,-y],[0,0,1,-z]])
+
+    new_affine = np.dot(affine_matrix,translation)
     
+    #offset in the center
+    center = 0.5*np.array(image_data.shape)
+    offset = center - center.dot(new_affine[:3,:3])  
     
+    translation_data = affine_transform(image_data,new_affine[0:3,0:3:].T,
+                                    offset=offset,order=0)
     
-    
-    return shifted_data
+    pass
 
 
 if __name__ == "main":
@@ -47,11 +79,10 @@ if __name__ == "main":
     
     image_data = image.get_data()
 
-
-    rotated_brain = rotate_brain(image_data,angle=30,axis=0)
-    
-    shifted_brain = shift_brain(rotated_brain,[0, 0, -30])
-    
+    angle =20
+    axis =3
+    rotated_brain, new_affine = rotate_brain(image_data,angle,axis,
+                                             affine_matrix = image.affine)
     
     
     plt.figure()
@@ -59,5 +90,5 @@ if __name__ == "main":
     plt.show()
     
     plt.figure()
-    plt.imshow(shifted_brain[100,:,:],interpolation='none')
+    plt.imshow(rotated_brain[100,:,:],interpolation='none')
     plt.show()
