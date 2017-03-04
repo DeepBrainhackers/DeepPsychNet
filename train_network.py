@@ -60,6 +60,7 @@ def train_network(data, y, id_train, id_valid, id_test, network, save_path, batc
     train_op = network.get_training_function()
 
     with tf.Session() as sess:
+
         sess.run(tf.global_variables_initializer())
 
         print "Training..."
