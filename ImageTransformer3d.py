@@ -20,26 +20,32 @@ class ImageTransformer3d(object):
         id_data = self.id_data
 
         if self.shuffle:
-            id_data = np.random.shuffle(self.id_data)
+            np.random.shuffle(self.id_data)
 
-        num_iter = self.batch_size
         if self.augment:
-            num_iter /= self.num_augmentations
+            self.__iter_augment(id_data)
+        else:
+            self.__iter_no_augment(id_data)
 
-        for offset_batch in xrange(self.n_data, num_iter):
+    def __iter_no_augment(self, id_data):
+        for offset_batch in xrange(self.n_data, self.batch_size):
             end_batch = np.minimum(offset_batch, self.n_data)
             id_minibatch = np.sort(id_data[offset_batch:end_batch])
+            yield (self.data[id_minibatch, ...], np.array(self.y[id_minibatch]))
 
-            if self.augment:
-                data, y = self.data_augmentation(id_minibatch)
-            else:
-                data, y = self.data[id_minibatch, ...], self.y[id_minibatch]
+    def __iter_augment(self, id_data):
 
-            yield (data, y)
+        for offset_batch in xrange(self.n_data, self.batch_size/self.num_augmentations):
+            end_batch = np.minimum(offset_batch, self.n_data)
+            id_minibatch = np.sort(id_data[offset_batch:end_batch])
+            yield self.data_augmentation(id_minibatch)
 
     def data_augmentation(self, id_minibatch):
-        images_to_load = id_minibatch[:self.batch_size/self.num_augmentations]
+        images_used = self.batch_size/self.num_augmentations
+        images_to_load = id_minibatch[:images_used]
         y = self.y[images_to_load]
+        y = np.concatenate([y for _ in xrange(images_used)])
+
         data_to_augment = self.data[images_to_load, ...]
 
         #TODO: augment
