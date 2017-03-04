@@ -1,19 +1,12 @@
+import numpy as np
 import tensorflow as tf
 from tensorflow.contrib.layers import flatten
-import numpy as np
 
 
 class DeepPsychNet(object):
 
     def __init__(self, X, y, n_classes, conv_layers_params, max_pool_layers_params, fc_layers_params,
                  init_mu=0., init_sigma=0.1):
-        """
-
-        :param conv_layers_params: list of dictionaries
-        :param max_pool_layers_params: list of dicitionaries
-        :param init_mu: set to 0.
-        :param init_sigma: set 0.1
-        """
         assert len(conv_layers_params) == len(max_pool_layers_params), 'Expects same number of ' \
                                                                        'convolutional/max-pooling layers'
 
@@ -108,11 +101,10 @@ class DeepPsychNet(object):
         return tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
 
-if __name__ == '__main__':
+def run():
     n_classes = 2
     batch_size = 64
     nx, ny, nz = 91, 109, 91
-
     conv_params = [{'shape': (8, 8, 8, 1, 6),
                     'strides': (1, 2, 2, 2, 1)},
                    {'shape': (5, 5, 5, 6, 16),
@@ -126,11 +118,11 @@ if __name__ == '__main__':
     fc_params = [{'shape': (1280, 120)},
                  {'shape': (120, 84)},
                  {'shape': (84, n_classes)}]
-
     X = tf.placeholder(tf.float32, (batch_size, nx, ny, nz, 1))
     y = tf.placeholder(tf.int32, (batch_size))
-
     network = DeepPsychNet(X, y, n_classes=n_classes, conv_layers_params=conv_params,
                            max_pool_layers_params=max_pool_params, fc_layers_params=fc_params)
 
-    training_op = network.get_training_function()
+
+if __name__ == '__main__':
+    run()

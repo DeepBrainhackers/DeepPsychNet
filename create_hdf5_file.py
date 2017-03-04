@@ -1,11 +1,12 @@
-import h5py
-from glob import glob
-import nibabel as nib
-from sys import stdout
-import numpy as np
-from time import time
-import os.path as osp
 import os
+import os.path as osp
+from glob import glob
+from sys import stdout
+from time import time
+
+import h5py
+import nibabel as nib
+import numpy as np
 
 
 def ensure_folder(folder_dir):
@@ -13,7 +14,7 @@ def ensure_folder(folder_dir):
         os.makedirs(folder_dir)
 
 
-def create_hdf5_file(directory_data, sub_folders=['ASD', 'CON'], save_directory='hdf5_data', save_path='data.hdf5'):
+def create_hdf5_file(directory_data, sub_folders=('ASD', 'CON'), save_directory='hdf5_data', save_path='data.hdf5'):
     ensure_folder(save_directory)
 
     path_niftis, n_subj, subj_id = get_niftis(directory_data, sub_folders)
@@ -52,8 +53,8 @@ def get_affine_shape(path_niftis):
 
 
 def get_niftis(directory_data, sub_folders, nifti_ending='*T1_shft_res.nii'):
-    if not isinstance(sub_folders, list):
-        sub_folders = list(sub_folders)
+    if not isinstance(sub_folders, tuple):
+        sub_folders = (sub_folders)
 
     num_subj = np.zeros(len(sub_folders), dtype=np.int)
     path_def = []
@@ -67,9 +68,13 @@ def get_niftis(directory_data, sub_folders, nifti_ending='*T1_shft_res.nii'):
     return path_def, num_subj, np.array(subj_id)
 
 
-if __name__ == '__main__':
+def run():
     directory_data = '/media/paul/kaggle/dataProcessed'
-    sub_folders = ['ASD', 'CON']
+    sub_folders = ('ASD', 'CON')
     save_folder = '/media/paul/kaggle/dataHDF5'
     save_file = 'abide.hdf5'
     create_hdf5_file(directory_data, sub_folders, save_directory=save_folder, save_path=save_file)
+
+
+if __name__ == '__main__':
+    run()
