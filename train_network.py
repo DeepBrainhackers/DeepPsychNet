@@ -30,6 +30,7 @@ def evaluate(data, y_data, id_to_take, network, batch_size=25):
         stdout.flush()
         end = np.minimum(offset+batch_size, num_examples)
         id_minibatch = id_to_take[offset:end]
+	id_minibatch = np.sort(id_minibatch)
         batch_x, batch_y = atleast_5d(data[id_minibatch, :, :, :, :]), np.array(y_data[id_minibatch])
         accuracy = sess.run(network.get_performance(), feed_dict={network.input: batch_x, network.label: batch_y})
         accuracy_batches[i_batch] = accuracy
@@ -126,8 +127,8 @@ def init_network(batch_size, n_classes=2):
                  {'shape': (120, 84)},
                  {'shape': (84, n_classes)}]
 
-    X = tf.placeholder(tf.float32, (batch_size, nx, ny, nz, 1))
-    y = tf.placeholder(tf.int32, (batch_size))
+    X = tf.placeholder(tf.float32, (None, nx, ny, nz, 1))
+    y = tf.placeholder(tf.int32, (None))
 
     return DeepPsychNet(X, y, n_classes=n_classes, conv_layers_params=conv_params,
                         max_pool_layers_params=max_pool_params, fc_layers_params=fc_params)
@@ -147,8 +148,8 @@ def test(hdf5_file, batch_size):
 
 
 if __name__ == '__main__':
-    hdf5_file = '/media/paul/kaggle/dataHDF5/abide.hdf5'
-    save_path = '/media/paul/kaggle/dataHDF5/DeepPsychNet'
+    hdf5_file = '/home/rthomas/BrainHack/dataHDF5/abide.hdf5'
+    save_path = '/home/rthomas/BrainHack/dataHDF5/DeepPsychNet'
     batch_size = 25
     # tmp = test(hdf5_file, batch_size)
     iterate_and_train(hdf5_file_path=hdf5_file, save_path=save_path, batch_size=batch_size)
