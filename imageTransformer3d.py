@@ -1,9 +1,10 @@
 import numpy as np
-
+from rotate_translate_brain import rotate_brain
 
 class ImageTransformer3d(object):
 
-    def __init__(self, data_obj, y_label, id_data, batch_size, num_augment_per_image=5, augment=False, shuffle=True):
+    def __init__(self, data_obj, affine, y_label, id_data, batch_size, num_augment_per_image=5, augment=False,
+                 shuffle=True):
 
         assert batch_size % num_augment_per_image != 0, 'The number of augmentations per image has to be '
 
@@ -15,6 +16,7 @@ class ImageTransformer3d(object):
         self.n_data = self.id_data.size
         self.shuffle = shuffle
         self.num_augmentations = num_augment_per_image
+        self.affine = affine
 
     def iter(self):
         id_data = self.id_data
@@ -47,7 +49,18 @@ class ImageTransformer3d(object):
         y = np.concatenate([y for _ in xrange(images_used)])
 
         data_to_augment = self.data[images_to_load, ...]
-        data = data_to_augment
-        #TODO: augment
+        affine_for_augment = self.affine[images_to_load]
+
+        axis_to_rotate = np.random.randint(1, 4, self.batch_size)
+        angle_to_rotate = np.random.randint(0, 181, self.batch_size)
+
+        data = np.zeros(((self.batch_size, ) + data_to_augment.shape[1:]), dtype=data_to_augment.dtype)
+
+        # TODO: How to handle the indices? How to handle the affine matrices
+        for i in xrange(images_to_load.size):
+            data[i] = rotate_brain(data_to_augment)
+
+        # data = [rotate_brain(data_to_augment[i], angle_to_rotate[i], axis_to_rotate[i],
+        #                      affine_matrix=affine_for_augment[i]) ]
 
         return data, y
