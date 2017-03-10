@@ -17,7 +17,7 @@ def run():
     batch_size = 25
     num_epochs = 20
     # if 1 no augmentation will be performed. Has to be a multiple of batch_size otherwise
-    num_augmentations = 1
+    num_augmentations = 5
 
     iterate_and_train(hdf5_file_path=hdf5_file, save_path=save_folder, model_name=model_name, batch_size=batch_size,
                       num_augmentation=num_augmentations, num_epochs=num_epochs)
@@ -87,11 +87,12 @@ def train_network(data, y, affine, id_train, id_valid, id_test, network, save_pa
                   num_epochs=20, num_augmentation=1):
     saver = tf.train.Saver()
 
-    num_batches_train = int(np.ceil(id_train.size/(float(batch_size))))
+    num_batches_train = int(np.ceil(id_train.size/((float(batch_size)/num_augmentation))))
+    num_batches_train_validation = int(np.ceil(id_train.size/(float(batch_size))))
     num_batches_test = int(np.ceil(id_test.size/float(batch_size)))
     num_batches_valid = int(np.ceil(id_valid.size/float(batch_size)))
 
-    accuracy_train = np.zeros((num_batches_train, num_epochs))
+    accuracy_train = np.zeros((num_batches_train_validation, num_epochs))
     accuracy_test = np.zeros((num_batches_test, num_epochs))
     accuracy_valid = np.zeros((num_batches_valid, num_epochs))
 
