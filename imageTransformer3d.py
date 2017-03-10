@@ -1,21 +1,21 @@
 import numpy as np
+from itertools import product
 from rotate_translate_brain import rotate_brain
 
 class ImageTransformer3d(object):
 
-    def __init__(self, data_obj, affine, y_label, id_data, batch_size, num_augment_per_image=5, augment=False,
-                 shuffle=True):
+    def __init__(self, data_obj, affine, y_label, id_data, batch_size, num_augmentation_set=1, shuffle=True):
 
-        assert batch_size % num_augment_per_image != 0, 'The number of augmentations per image has to be '
+        assert batch_size % num_augmentation_set != 0, 'The number of augmentations per image has to be a multiple of batch_size'
 
         self.batch_size = batch_size
-        self.augment = augment
+        self.augment = num_augmentation_set > 1
         self.data = data_obj
         self.y = y_label
         self.id_data = id_data
         self.n_data = self.id_data.size
         self.shuffle = shuffle
-        self.num_augmentations = num_augment_per_image
+        self.num_augmentations = num_augmentation_set
         self.affine = affine
 
     def iter(self):
@@ -31,36 +31,41 @@ class ImageTransformer3d(object):
 
     def __iter_no_augment(self, id_data):
         for offset_batch in xrange(self.n_data, self.batch_size):
-            end_batch = np.minimum(offset_batch, self.n_data)
+            end_batch = np.minimum(offset_batch + self.batch_size, self.n_data)
             id_minibatch = np.sort(id_data[offset_batch:end_batch])
-            yield (self.data[id_minibatch, ...], np.array(self.y[id_minibatch]))
+            yield (self.data[id_minibatch, ...], np.array(self.y[id_minibatch]), self.affine[id_minibatch, ...])
 
     def __iter_augment(self, id_data):
 
-        for offset_batch in xrange(self.n_data, self.batch_size/self.num_augmentations):
-            end_batch = np.minimum(offset_batch, self.n_data)
+        num_orig_images = self.batch_size/self.num_augmentations
+
+        for offset_batch in xrange(self.n_data, num_orig_images):
+            end_batch = np.minimum(offset_batch + num_orig_images, self.n_data)
             id_minibatch = np.sort(id_data[offset_batch:end_batch])
-            yield self.data_augmentation(id_minibatch)
 
-    def data_augmentation(self, id_minibatch):
-        images_used = self.batch_size/self.num_augmentations
-        images_to_load = id_minibatch[:images_used]
-        y = self.y[images_to_load]
-        y = np.concatenate([y for _ in xrange(images_used)])
+            yield self.data_augmentation(id_minibatch, num_orig_images)
 
-        data_to_augment = self.data[images_to_load, ...]
-        affine_for_augment = self.affine[images_to_load]
+    def data_augmentation(self, id_minibatch, num_orig_images):
+        y = self.y[id_minibatch]
+        y = np.concatenate((y, np.repeat(y, self.num_augmentations - 1)))
 
-        axis_to_rotate = np.random.randint(1, 4, self.batch_size)
-        angle_to_rotate = np.random.randint(0, 181, self.batch_size)
+        data_to_augment = self.data[id_minibatch, ...]
+        affine_for_augment = self.affine[id_minibatch, ...]
 
-        data = np.zeros(((self.batch_size, ) + data_to_augment.shape[1:]), dtype=data_to_augment.dtype)
+        axis_to_rotate = np.random.randint(1, 4, size=(num_orig_images, self.num_augmentations - 1))
+        angle_to_rotate = np.random.randint(1, 181, size=(num_orig_images, self.num_augmentations - 1))
 
-        # TODO: How to handle the indices? How to handle the affine matrices
-        for i in xrange(images_to_load.size):
-            data[i] = rotate_brain(data_to_augment)
+        data_new = np.zeros(((self.batch_size, ) + data_to_augment.shape[1:]), dtype=data_to_augment.dtype)
+        affine_new = np.zeros(((self.batch_size, ) + affine_for_augment.shape[1:]), dtype=affine_for_augment.dtype)
 
-        # data = [rotate_brain(data_to_augment[i], angle_to_rotate[i], axis_to_rotate[i],
-        #                      affine_matrix=affine_for_augment[i]) ]
+        data_new[:num_orig_images] = data_to_augment
+        affine_new[:num_orig_images] = affine_for_augment
 
-        return data, y
+        for id_new, (id_img, id_augment) in enumerate(product(xrange(num_orig_images), xrange(self.num_augmentations - 1))):
+            id_new += num_orig_images
+            data_new[id_new, ...], affine_new[id_new, ...] = rotate_brain(data_to_augment[id_img, ...],
+                                                                          angle_to_rotate[id_img, id_augment],
+                                                                          axis_to_rotate[id_img, id_augment],
+                                                                          affine_for_augment[id_img, ...])
+
+        return data_new, y, affine_new
