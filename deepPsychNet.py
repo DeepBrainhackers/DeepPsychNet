@@ -24,7 +24,6 @@ class DeepPsychNet(object):
         self.fc_params = fc_layers_params
         self.num_layers_fc = len(fc_layers_params)
         self.num_layers = self.num_layers_conv + self.num_layers_fc
-        self.variable_list = []
 
         self.network = self.initialize_network()
 
@@ -49,8 +48,6 @@ class DeepPsychNet(object):
                                                      mean=self.init_mu,
                                                      stddev=self.init_sigma))
             conv_b = tf.Variable(tf.zeros(shape_conv_layer[-1]))
-            self.variable_list += [conv_W]
-            self.variable_list += [conv_b]
 
             conv = tf.nn.conv3d(input_to_layer, conv_W, strides=stride_conv_layer, padding='VALID') + conv_b
 
@@ -72,8 +69,6 @@ class DeepPsychNet(object):
             # Layer 3: Fully Connected. Input = previous. Output = 120.
             fc_W = tf.Variable(tf.truncated_normal(shape=shape_layer, mean=self.init_mu, stddev=self.init_sigma))
             fc_b = tf.Variable(tf.zeros(shape_layer[-1]))
-            self.variable_list += [fc_W]
-            self.variable_list += [fc_b]
 
             fc = tf.matmul(input_to_layer, fc_W) + fc_b
 
