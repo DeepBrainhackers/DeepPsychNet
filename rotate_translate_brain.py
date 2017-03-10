@@ -5,10 +5,9 @@ Spyder Editor
 This is a temporary script file.
 """
 
-import nibabel as nib
 import numpy as np
-import math
 from scipy.ndimage.interpolation import affine_transform
+
 
 def rotate_brain(image_data, angle, axis, affine_matrix):
     """
@@ -74,27 +73,3 @@ def shift_brain(image_data, shift, axis,affine_matrix):
                                     offset=offset,order=0)
     
     return translation_data, new_affine
-
-
-if __name__ == "main":
-    
-    fname = "/home/egill/Dropbox/Brainhack/data/ASD/0050182_T1.nii"
-    
-    image = nib.load(fname)
-    
-    image_data = image.get_data()
-
-    angle =50
-    axis =1
-    shift = -50
-    translated_brain, new_affine = shift_brain(image_data,shift,axis,
-                                             affine_matrix = image.affine)
-    
-    
-    plt.figure()
-    plt.imshow(image_data[100,:,:],interpolation='none')
-    plt.show()
-    
-    plt.figure()
-    plt.imshow(translated_brain[100,:,:],interpolation='none')
-    plt.show()
