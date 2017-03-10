@@ -118,6 +118,7 @@ def train_network(data, y, affine, id_train, id_valid, id_test, network, save_pa
 
                 sess.run(train_op, feed_dict={network.input: batch_x, network.label: batch_y})
 
+            print
             print 'Validation...'
             accuracy_valid[:, id_epoch] = evaluate(data, y, id_valid, network, affine, batch_size=batch_size)
             accuracy_train[:, id_epoch] = evaluate(data, y, id_train, network, affine, batch_size=batch_size)
