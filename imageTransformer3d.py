@@ -30,7 +30,7 @@ class ImageTransformer3d(object):
             gen = self.__iter_no_augment(id_data)
 
         for data, y, affine in gen:
-            yield data, y, affine
+            yield self.atleast_5d(data), np.array(y), affine
 
     def __iter_no_augment(self, id_data):
         for offset_batch in xrange(0, self.n_data, self.batch_size):
@@ -73,6 +73,12 @@ class ImageTransformer3d(object):
                                                                           affine_for_augment[id_img, ...])
 
         return data_new, y, affine_new
+
+    @staticmethod
+    def atleast_5d(data):
+        if len(data.shape) != 5:
+            return data[np.newaxis, :, :, :, :]
+        return data
 
 if __name__ == '__main__':
     X = np.random.rand(50, 5, 5, 5, 1)

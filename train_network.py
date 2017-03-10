@@ -1,4 +1,5 @@
 from sys import stdout
+import os.path as osp
 
 import h5py
 import numpy as np
@@ -6,14 +7,20 @@ import tensorflow as tf
 from sklearn.model_selection import train_test_split
 
 from deepPsychNet import DeepPsychNet
+from imageTransformer3d import ImageTransformer3d
 
 
 def run():
     hdf5_file = '/home/rthomas/BrainHack/dataHDF5/abide.hdf5'
-    save_path = '/home/rthomas/BrainHack/dataHDF5/DeepPsychNet'
+    save_folder = '/home/rthomas/BrainHack/dataHDF5/DeepPsychNet'
+    model_name = 'lenet3d.ckpt'
     batch_size = 25
-    # tmp = test(hdf5_file, batch_size)
-    iterate_and_train(hdf5_file_path=hdf5_file, save_path=save_path, batch_size=batch_size)
+    num_epochs = 20
+    # if 1 no augmentation will be performed. Has to be a multiple of batch_size otherwise
+    num_augmentations = 1
+
+    iterate_and_train(hdf5_file_path=hdf5_file, save_path=save_folder, model_name=model_name, batch_size=batch_size,
+                      num_augmentation=num_augmentations, num_epochs=num_epochs)
 
 
 def init_network(batch_size=None, n_classes=2):
@@ -55,36 +62,32 @@ def create_train_validation_test_set(data, y, num_test=100, num_valid=100):
     return data_train, data_valid, data_test
 
 
-def evaluate(data, y_data, id_to_take, network, batch_size=25):
+def evaluate(data, y_data, id_to_take, network, affine, batch_size=25):
     num_examples = id_to_take.size
     sess = tf.get_default_session()
     num_batches = int(np.ceil(num_examples/float(batch_size)))
     accuracy_batches = np.zeros(num_batches)
 
-    for i_batch, offset in enumerate(xrange(0, num_examples, batch_size)):
+    image_iterator_transformer = ImageTransformer3d(data_obj=data, affine=affine, y_label=y_data,
+                                                    id_data=id_to_take, batch_size=batch_size,
+                                                    num_augmentation_set=1, shuffle=False)
+    image_generator = image_iterator_transformer.iter()
+
+    for i_batch, (batch_x, batch_y, _) in enumerate(image_generator):
         stdout.write('\r {}/{}'.format(i_batch + 1, num_batches))
         stdout.flush()
-        end = np.minimum(offset+batch_size, num_examples)
-        id_minibatch = id_to_take[offset:end]
-        id_minibatch = np.sort(id_minibatch)
-        batch_x, batch_y = atleast_5d(data[id_minibatch, :, :, :, :]), np.array(y_data[id_minibatch])
+
         accuracy = sess.run(network.get_performance(), feed_dict={network.input: batch_x, network.label: batch_y})
         accuracy_batches[i_batch] = accuracy
     print
     return accuracy_batches
 
 
-def atleast_5d(data):
-    if len(data.shape) != 5:
-        return data[np.newaxis, :, :, :, :]
-    return data
-
-
-def train_network(data, y, id_train, id_valid, id_test, network, save_path, batch_size=25, num_epochs=20):
+def train_network(data, y, affine, id_train, id_valid, id_test, network, save_path, model_name, batch_size=25,
+                  num_epochs=20, num_augmentation=1):
     saver = tf.train.Saver()
-    num_train_examples = id_train.size
 
-    num_batches_train = int(np.ceil(id_train.size/float(batch_size)))
+    num_batches_train = int(np.ceil(id_train.size/(float(batch_size)/num_augmentation)))
     num_batches_test = int(np.ceil(id_test.size/float(batch_size)))
     num_batches_valid = int(np.ceil(id_valid.size/float(batch_size)))
 
@@ -103,23 +106,21 @@ def train_network(data, y, id_train, id_valid, id_test, network, save_path, batc
 
         for id_epoch in xrange(num_epochs):
 
-            # will shuffle the indices of the training data INPLACE (i.e. id_train changed)
-            np.random.shuffle(id_train)
+            image_iterator_transformer = ImageTransformer3d(data_obj=data, affine=affine, y_label=y,
+                                                            id_data=id_train, batch_size=batch_size,
+                                                            num_augmentation_set=num_augmentation, shuffle=True)
+            image_generator = image_iterator_transformer.iter()
 
-            for id_batch, offset in enumerate(xrange(0, num_train_examples, batch_size)):
+            for id_batch, (batch_x, batch_y, affine_train) in enumerate(image_generator):
                 stdout.write('\r {}/{}'.format(id_batch + 1, num_batches_train))
                 stdout.flush()
-                end = np.minimum(offset + batch_size, num_train_examples)
-                id_minibatch = id_train[offset:end]
-                id_minibatch = np.sort(id_minibatch)
 
-                batch_x, batch_y = atleast_5d(data[id_minibatch, :, :, :, :]), np.array(y[id_minibatch])
                 sess.run(train_op, feed_dict={network.input: batch_x, network.label: batch_y})
 
             print 'Validation...'
-            accuracy_valid[:, id_epoch] = evaluate(data, y, id_valid, network, batch_size=batch_size)
-            accuracy_train[:, id_epoch] = evaluate(data, y, id_train, network, batch_size=batch_size)
-            accuracy_test[:, id_epoch] = evaluate(data, y, id_test, network, batch_size=batch_size)
+            accuracy_valid[:, id_epoch] = evaluate(data, y, id_valid, network, affine, batch_size=batch_size)
+            accuracy_train[:, id_epoch] = evaluate(data, y, id_train, network, affine, batch_size=batch_size)
+            accuracy_test[:, id_epoch] = evaluate(data, y, id_test, network, affine, batch_size=batch_size)
 
             print
             print "EPOCH {}/{}: Training Acc: {:.3f}; Validation Acc = {:.3f}; Test Acc = {:.3f}".format(id_epoch + 1,
@@ -128,34 +129,24 @@ def train_network(data, y, id_train, id_valid, id_test, network, save_path, batc
                                                                                                          accuracy_valid[:, id_epoch].mean(),
                                                                                                          accuracy_test[:, id_epoch].mean())
         print
-        saver.save(sess, save_path)
+        saver.save(sess, osp.join(save_path, model_name))
+        np.savez_compressed(osp.join(save_path, 'accuracies_data.npz'), accuracy_train=accuracy_train,
+                            accuracy_valid=accuracy_valid, accuracy_test=accuracy_test)
         print 'Model saved!'
 
 
-def iterate_and_train(hdf5_file_path, save_path, batch_size=25):
+def iterate_and_train(hdf5_file_path, save_path, model_name='model.ckpt', batch_size=25, num_epochs=20,
+                      num_augmentation=1):
     network = init_network(batch_size)
 
     with h5py.File(hdf5_file_path, 'r') as hdf5_file:
         dataT1 = hdf5_file['dataT1']
+        affine = hdf5_file['dataAffine']
         y_labels = dataT1.attrs['labels_subj'].astype(np.int32)
         id_subj = np.arange(dataT1.shape[0])
         id_train, id_valid, id_test = create_train_validation_test_set(id_subj, y_labels, num_test=100, num_valid=100)
-        train_network(dataT1, y_labels, id_train, id_valid, id_test, network, save_path,
-                      batch_size=batch_size, num_epochs=20)
-
-
-def test(hdf5_file, batch_size):
-    network = init_network(batch_size)
-    with h5py.File(hdf5_file, 'r') as hdf5_file:
-        data = hdf5_file['dataT1']
-        data = data[:batch_size, :, :, :, :]
-
-        prediction = tf.nn.softmax(network.network)
-        with tf.Session() as sess:
-            sess.run(tf.variables_initializer(network.variable_list))
-            new_predictions = sess.run(prediction, feed_dict={network.input: data})
-
-    return new_predictions
+        train_network(dataT1, y_labels, affine, id_train, id_valid, id_test, network, save_path, model_name,
+                      batch_size=batch_size, num_epochs=num_epochs, num_augmentation=num_augmentation)
 
 
 if __name__ == '__main__':
