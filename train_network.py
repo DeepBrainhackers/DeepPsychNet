@@ -87,7 +87,7 @@ def train_network(data, y, affine, id_train, id_valid, id_test, network, save_pa
                   num_epochs=20, num_augmentation=1):
     saver = tf.train.Saver()
 
-    num_batches_train = int(np.ceil(id_train.size/(float(batch_size)/num_augmentation)))
+    num_batches_train = int(np.ceil(id_train.size/(float(batch_size))))
     num_batches_test = int(np.ceil(id_test.size/float(batch_size)))
     num_batches_valid = int(np.ceil(id_valid.size/float(batch_size)))
 
@@ -137,7 +137,7 @@ def train_network(data, y, affine, id_train, id_valid, id_test, network, save_pa
 
 def iterate_and_train(hdf5_file_path, save_path, model_name='model.ckpt', batch_size=25, num_epochs=20,
                       num_augmentation=1):
-    network = init_network(batch_size)
+    network = init_network()
 
     with h5py.File(hdf5_file_path, 'r') as hdf5_file:
         dataT1 = hdf5_file['dataT1']
