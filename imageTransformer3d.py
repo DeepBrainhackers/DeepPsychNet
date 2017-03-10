@@ -6,7 +6,7 @@ class ImageTransformer3d(object):
 
     def __init__(self, data_obj, affine, y_label, id_data, batch_size, num_augmentation_set=1, shuffle=True):
 
-        assert batch_size % num_augmentation_set != 0, 'The number of augmentations per image has to be a multiple of batch_size'
+        assert batch_size % num_augmentation_set == 0, 'The number of augmentations per image has to be a multiple of batch_size'
 
         self.batch_size = batch_size
         self.augment = num_augmentation_set > 1
@@ -25,12 +25,15 @@ class ImageTransformer3d(object):
             np.random.shuffle(self.id_data)
 
         if self.augment:
-            yield self.__iter_augment(id_data)
+            gen = self.__iter_augment(id_data)
         else:
-            yield self.__iter_no_augment(id_data)
+            gen = self.__iter_no_augment(id_data)
+
+        for data, y, affine in gen:
+            yield data, y, affine
 
     def __iter_no_augment(self, id_data):
-        for offset_batch in xrange(self.n_data, self.batch_size):
+        for offset_batch in xrange(0, self.n_data, self.batch_size):
             end_batch = np.minimum(offset_batch + self.batch_size, self.n_data)
             id_minibatch = np.sort(id_data[offset_batch:end_batch])
             yield (self.data[id_minibatch, ...], np.array(self.y[id_minibatch]), self.affine[id_minibatch, ...])
@@ -39,11 +42,12 @@ class ImageTransformer3d(object):
 
         num_orig_images = self.batch_size/self.num_augmentations
 
-        for offset_batch in xrange(self.n_data, num_orig_images):
+        for offset_batch in xrange(0, self.n_data, num_orig_images):
             end_batch = np.minimum(offset_batch + num_orig_images, self.n_data)
             id_minibatch = np.sort(id_data[offset_batch:end_batch])
+            data, y, affine = self.data_augmentation(id_minibatch, num_orig_images)
 
-            yield self.data_augmentation(id_minibatch, num_orig_images)
+            yield data, y, affine
 
     def data_augmentation(self, id_minibatch, num_orig_images):
         y = self.y[id_minibatch]
@@ -63,9 +67,19 @@ class ImageTransformer3d(object):
 
         for id_new, (id_img, id_augment) in enumerate(product(xrange(num_orig_images), xrange(self.num_augmentations - 1))):
             id_new += num_orig_images
-            data_new[id_new, ...], affine_new[id_new, ...] = rotate_brain(data_to_augment[id_img, ...],
+            data_new[id_new, ..., 0], affine_new[id_new, ...] = rotate_brain(data_to_augment[id_img, ...].squeeze(),
                                                                           angle_to_rotate[id_img, id_augment],
                                                                           axis_to_rotate[id_img, id_augment],
                                                                           affine_for_augment[id_img, ...])
 
         return data_new, y, affine_new
+
+if __name__ == '__main__':
+    X = np.random.rand(50, 5, 5, 5, 1)
+    y = np.random.randint(0, 2, 50)
+    affine = np.random.rand(50, 4, 4)
+    idx = np.arange(50)
+    batch_size = 10
+    num_augment = 5
+
+    transformer = ImageTransformer3d(X, affine, y, idx, batch_size, num_augmentation_set=num_augment)
