@@ -4,11 +4,14 @@ import os
 
 
 def to_native_coords(y_file, affine_rand_rot, mm_mni):
-    '''
-     :input: y_file
-     Code adapted from John Ashburner (private comm)
+    """
+     :input: y_file (filename of the warped file
+            affine_rand_rot (the affine matrix used for random rotation)
+            mm_mni (the MNI coordinate desired)
+
+     /// Code adapted from John Ashburner (private comm)
      :return: coordinates in native space.
-    '''
+    """
 
     V = ni.load(y_file)
     iM = np.linalg.inv(V.affine).dot(affine_rand_rot)
