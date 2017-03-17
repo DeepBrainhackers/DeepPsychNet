@@ -75,7 +75,7 @@ class DeepPsychNet(object):
             shape_layer = fc_params_layer['shape']
 
             # Fully Connected Layers. Input = previous
-            if len(shape_layer) == 2:
+            if isinstance(shape_layer, list) and len(shape_layer) == 2:
                 fc_W1 = tf.Variable(tf.truncated_normal(shape=shape_layer[0], mean=self.init_mu, stddev=self.init_sigma))
                 fc_b1 = tf.Variable(tf.zeros(shape_layer[0][-1]))
 
