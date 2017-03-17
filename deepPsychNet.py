@@ -6,7 +6,7 @@ from tensorflow.contrib.layers import flatten
 class DeepPsychNet(object):
 
     def __init__(self, X, y, n_classes, conv_layers_params, max_pool_layers_params, fc_layers_params,
-                 init_mu=0., init_sigma=0.1, dropout=True, use_prior=True):
+                 init_mu=0., init_sigma=0.1, dropout=True, use_prior=False):
         assert len(conv_layers_params) == len(max_pool_layers_params), 'Expects same number of ' \
                                                                        'convolutional/max-pooling layers'
         self.input = X
@@ -116,7 +116,7 @@ class DeepPsychNet(object):
         return tf.reduce_mean(cost_function)
 
     def get_hot_encoding(self):
-        return tf.one_hot(self.label, self.n_classes)
+        return tf.one_hot(self.label, self.n_classes, dtype=tf.int32)
 
     def get_training_function(self, learning_rate=0.001):
         optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
