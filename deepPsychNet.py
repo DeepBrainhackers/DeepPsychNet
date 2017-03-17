@@ -123,10 +123,10 @@ class DeepPsychNet(object):
         return optimizer.minimize(self.cost_function)
 
     def get_performance(self):
-        threshold = tf.constant(np.array(0.5, dtype=tf.float32))
+        threshold = tf.constant(0.5, dtype=tf.float32)
         converted_output = tf.cast(tf.greater(self.network, threshold), tf.int32)
-        sens_spec = tf.divide(tf.cast(tf.reduce_sum(tf.equal(converted_output, self.one_hot_y_encoding), axis=0),
-                                      tf.float32),
+        correct_pred = tf.cast(tf.equal(converted_output, self.one_hot_y_encoding), tf.int32)
+        sens_spec = tf.divide(tf.cast(tf.reduce_sum(correct_pred, axis=0), tf.float32),
                               tf.cast(tf.reduce_sum(self.one_hot_y_encoding, axis=0), tf.float32))
         return tf.reduce_mean(sens_spec)
 
