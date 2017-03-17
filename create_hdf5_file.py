@@ -63,7 +63,7 @@ def get_niftis(directory_data, sub_folders, nifti_ending='*T1_shft_res.nii'):
     path_def = []
     subj_id = []
     for i_sub_folder, sub_folder in enumerate(sub_folders):
-        tmp = sorted(glob(osp.join(directory_data, sub_folder, nifti_ending)))
+        tmp = sorted(glob(osp.join(directory_data, sub_folder, '[!w !y]' + nifti_ending)))
         path_y_file += sorted(glob(osp.join(directory_data, sub_folder, 'y' + nifti_ending)))
         subj_id += [osp.basename(sub).split('_')[0] for sub in tmp]
         num_subj[i_sub_folder] = len(tmp)
@@ -72,10 +72,10 @@ def get_niftis(directory_data, sub_folders, nifti_ending='*T1_shft_res.nii'):
 
 
 def run():
-    directory_data = '/media/paul/kaggle/dataProcessed'
+    directory_data = '/home/rthomas/abide/dataProcessed'
     sub_folders = ('ASD', 'CON')
-    save_folder = '/media/paul/kaggle/dataHDF5'
-    save_file = 'abide.hdf5'
+    save_folder = '/home/rthomas/BrainHack/DeepPsychNet/dataHDF5'
+    save_file = 'abide_new.hdf5'
     img_pattern = '*T1_shft_res.nii'
     create_hdf5_file(directory_data, sub_folders, save_directory=save_folder, save_path=save_file,
                      nifit_ending=img_pattern)
