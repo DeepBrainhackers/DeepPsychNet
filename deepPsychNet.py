@@ -6,12 +6,14 @@ from tensorflow.contrib.layers import flatten
 class DeepPsychNet(object):
 
     def __init__(self, X, y, n_classes, conv_layers_params, max_pool_layers_params, fc_layers_params,
-                 init_mu=0., init_sigma=0.1, dropout=True):
+                 init_mu=0., init_sigma=0.1, dropout=True, use_prior=True):
         assert len(conv_layers_params) == len(max_pool_layers_params), 'Expects same number of ' \
                                                                        'convolutional/max-pooling layers'
-
         self.input = X
         self.label = y
+        self.prior = use_prior
+        self.coordinates = tf.placeholder(tf.float32)
+
         self.n_classes = n_classes
 
         self.init_mu = init_mu
@@ -27,7 +29,7 @@ class DeepPsychNet(object):
         self.dropout = dropout
         self.keep_dims = tf.placeholder(tf.float32)
 
-        self.network = self.initialize_network()
+        self.network, self.network2 = self.initialize_network()
 
         self.one_hot_y_encoding = self.get_hot_encoding()
         self.cost_function = self.get_cost_function()
@@ -66,31 +68,52 @@ class DeepPsychNet(object):
 
     def create_fully_connected(self, input_to_layer):
         output_network = np.nan
+        output_network2 = None
 
         for id_layer in xrange(self.num_layers_fc):
             fc_params_layer = self.fc_params[id_layer]
             shape_layer = fc_params_layer['shape']
 
-            # Fully Connected Layers. Input = previous. Output = 120.
-            fc_W = tf.Variable(tf.truncated_normal(shape=shape_layer, mean=self.init_mu, stddev=self.init_sigma))
-            fc_b = tf.Variable(tf.zeros(shape_layer[-1]))
+            # Fully Connected Layers. Input = previous
+            if len(shape_layer) == 2:
+                fc_W1 = tf.Variable(tf.truncated_normal(shape=shape_layer[0], mean=self.init_mu, stddev=self.init_sigma))
+                fc_b1 = tf.Variable(tf.zeros(shape_layer[0][-1]))
 
-            fc = tf.matmul(input_to_layer, fc_W) + fc_b
+                fc1 = tf.matmul(input_to_layer, fc_W1) + fc_b1
+
+                fc_W2 = tf.Variable(tf.truncated_normal(shape=shape_layer[1], mean=self.init_mu, stddev=self.init_sigma))
+                fc_b2 = tf.Variable(tf.zeros(shape_layer[1][-1]))
+
+                fc2 = tf.matmul(input_to_layer, fc_W2) + fc_b2
+            else:
+                fc_W = tf.Variable(tf.truncated_normal(shape=shape_layer, mean=self.init_mu, stddev=self.init_sigma))
+                fc_b = tf.Variable(tf.zeros(shape_layer[-1]))
+
+                fc = tf.matmul(input_to_layer, fc_W) + fc_b
+
 
             # Activation.
             if id_layer < (self.num_layers_fc - 1):
                 input_to_layer = tf.nn.relu(fc)
             else:
-                output_network = fc
+                if self.prior and (len(shape_layer) == 2):
+                    output_network = fc1
+                    output_network2 = fc2
+                else:
+                    output_network = fc
 
             if self.dropout and (id_layer == 1):
                 input_to_layer = tf.nn.dropout(input_to_layer, self.keep_dims)
 
-        return output_network
+        return output_network, output_network2
 
     def get_cost_function(self):
-        cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=self.network, labels=self.one_hot_y_encoding)
-        return tf.reduce_mean(cross_entropy)
+        cost_function = tf.nn.softmax_cross_entropy_with_logits(logits=self.network, labels=self.one_hot_y_encoding)
+
+        if self.prior:
+            mse = tf.losses.mean_squared_error(labels=self.coordinates, predictions=self.network2)
+            cost_function = tf.add(tf.multiply(cost_function, 1.), tf.multiply(mse, 0.001))
+        return tf.reduce_mean(cost_function)
 
     def get_hot_encoding(self):
         return tf.one_hot(self.label, self.n_classes)
