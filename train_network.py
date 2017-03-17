@@ -1,3 +1,4 @@
+import os
 from sys import stdout
 import os.path as osp
 
@@ -13,14 +14,15 @@ from imageTransformer3d import ImageTransformer3d
 def run():
     hdf5_file = '/home/rthomas/BrainHack/dataHDF5/abide.hdf5'
     save_folder = '/home/rthomas/BrainHack/dataHDF5/DeepPsychNet'
-    model_name = 'lenet3d.ckpt'
+    model_folder = 'lenet3d'
+    model_name = 'lenet3d'
     batch_size = 25
     num_epochs = 20
     # if 1 no augmentation will be performed. Has to be a multiple of batch_size otherwise
     num_augmentations = 5
 
-    iterate_and_train(hdf5_file_path=hdf5_file, save_path=save_folder, model_name=model_name, batch_size=batch_size,
-                      num_augmentation=num_augmentations, num_epochs=num_epochs)
+    iterate_and_train(hdf5_file_path=hdf5_file, save_path=save_folder, model_folder=model_folder, model_name=model_name,
+                      batch_size=batch_size, num_augmentation=num_augmentations, num_epochs=num_epochs)
 
 
 def init_network(batch_size=None, n_classes=2):
@@ -83,8 +85,8 @@ def evaluate(data, y_data, id_to_take, network, affine, batch_size=25):
     return accuracy_batches
 
 
-def train_network(data, y, affine, id_train, id_valid, id_test, network, save_path, model_name, batch_size=25,
-                  num_epochs=20, num_augmentation=1):
+def train_network(data, y, affine, id_train, id_valid, id_test, network, save_path, model_folder, model_name,
+                  batch_size=25, num_epochs=20, num_augmentation=1):
     saver = tf.train.Saver()
 
     num_batches_train = int(np.ceil(id_train.size/((float(batch_size)/num_augmentation))))
@@ -97,6 +99,10 @@ def train_network(data, y, affine, id_train, id_valid, id_test, network, save_pa
     accuracy_valid = np.zeros((num_batches_valid, num_epochs))
 
     train_op = network.get_training_function()
+    model_save = osp.join(save_path, model_folder)
+
+    if not osp.exists(model_save):
+        os.makedirs(model_save)
 
     with tf.Session() as sess:
 
@@ -130,15 +136,16 @@ def train_network(data, y, affine, id_train, id_valid, id_test, network, save_pa
                                                                                                          accuracy_train[:, id_epoch].mean(),
                                                                                                          accuracy_valid[:, id_epoch].mean(),
                                                                                                          accuracy_test[:, id_epoch].mean())
-        print
-        saver.save(sess, osp.join(save_path, model_name))
-        np.savez_compressed(osp.join(save_path, 'accuracies_data.npz'), accuracy_train=accuracy_train,
+            print
+            saver.save(sess, osp.join(model_save, model_name + '_epoch_{}.ckpt'.format(id_epoch + 1)))
+
+        np.savez_compressed(osp.join(model_save, 'accuracies_data.npz'), accuracy_train=accuracy_train,
                             accuracy_valid=accuracy_valid, accuracy_test=accuracy_test)
         print 'Model saved!'
 
 
-def iterate_and_train(hdf5_file_path, save_path, model_name='model.ckpt', batch_size=25, num_epochs=20,
-                      num_augmentation=1):
+def iterate_and_train(hdf5_file_path, save_path, model_folder='model', model_name='model.ckpt', batch_size=25,
+                      num_epochs=20, num_augmentation=1):
     network = init_network()
 
     with h5py.File(hdf5_file_path, 'r') as hdf5_file:
@@ -147,8 +154,8 @@ def iterate_and_train(hdf5_file_path, save_path, model_name='model.ckpt', batch_
         y_labels = dataT1.attrs['labels_subj'].astype(np.int32)
         id_subj = np.arange(dataT1.shape[0])
         id_train, id_valid, id_test = create_train_validation_test_set(id_subj, y_labels, num_test=100, num_valid=100)
-        train_network(dataT1, y_labels, affine, id_train, id_valid, id_test, network, save_path, model_name,
-                      batch_size=batch_size, num_epochs=num_epochs, num_augmentation=num_augmentation)
+        train_network(dataT1, y_labels, affine, id_train, id_valid, id_test, network, save_path, model_folder,
+                      model_name, batch_size=batch_size, num_epochs=num_epochs, num_augmentation=num_augmentation)
 
 
 if __name__ == '__main__':
