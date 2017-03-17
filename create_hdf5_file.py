@@ -18,7 +18,7 @@ def create_hdf5_file(directory_data, sub_folders=('ASD', 'CON'), save_directory=
                      nifit_ending='*T1_shft_res.nii'):
     ensure_folder(save_directory)
 
-    path_niftis, n_subj, subj_id = get_niftis(directory_data, sub_folders, nifti_ending=nifit_ending)
+    path_niftis, path_y_file, n_subj, subj_id = get_niftis(directory_data, sub_folders, nifti_ending=nifit_ending)
     labels_subj = np.concatenate((np.ones(n_subj[0]), np.zeros(n_subj[1])))
 
     affine_dtype, affine_shape, data_shape = get_affine_shape(path_niftis)
@@ -42,6 +42,7 @@ def create_hdf5_file(directory_data, sub_folders=('ASD', 'CON'), save_directory=
         print
         dataT1.attrs['labels_subj'] = labels_subj
         dataT1.attrs['subj_id'] = subj_id
+        dataT1.attrs['y_file'] = path_y_file
 
 
 def get_affine_shape(path_niftis):
@@ -58,16 +59,16 @@ def get_niftis(directory_data, sub_folders, nifti_ending='*T1_shft_res.nii'):
         sub_folders = (sub_folders)
 
     num_subj = np.zeros(len(sub_folders), dtype=np.int)
+    path_y_file = []
     path_def = []
     subj_id = []
     for i_sub_folder, sub_folder in enumerate(sub_folders):
         tmp = sorted(glob(osp.join(directory_data, sub_folder, nifti_ending)))
+        path_y_file += sorted(glob(osp.join(directory_data, sub_folder, 'y' + nifti_ending)))
         subj_id += [osp.basename(sub).split('_')[0] for sub in tmp]
         num_subj[i_sub_folder] = len(tmp)
         path_def += tmp
-
-
-    return path_def, num_subj, np.array(subj_id)
+    return path_def, np.array(path_y_file), num_subj, np.array(subj_id)
 
 
 def run():
