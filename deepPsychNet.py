@@ -25,6 +25,7 @@ class DeepPsychNet(object):
         self.num_layers_fc = len(fc_layers_params)
         self.num_layers = self.num_layers_conv + self.num_layers_fc
         self.dropout = dropout
+        self.keep_dims = tf.placeholder(tf.float32)
 
         self.network = self.initialize_network()
 
@@ -56,7 +57,7 @@ class DeepPsychNet(object):
             conv = tf.nn.relu(conv)
 
             if self.dropout and (id_layer == (self.num_layers_conv - 1)):
-                conv = tf.nn.dropout(conv, 0.5)
+                conv = tf.nn.dropout(conv, self.keep_dims)
 
             # Pooling
             input_to_layer = tf.nn.max_pool3d(conv, ksize=ksize, strides=strides, padding='VALID')
@@ -83,7 +84,7 @@ class DeepPsychNet(object):
                 output_network = fc
 
             if self.dropout and (id_layer == 1):
-                input_to_layer = tf.nn.dropout(input_to_layer, 0.5)
+                input_to_layer = tf.nn.dropout(input_to_layer, self.keep_dims)
 
         return output_network
 

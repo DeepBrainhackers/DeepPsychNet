@@ -79,7 +79,8 @@ def evaluate(data, y_data, id_to_take, network, affine, batch_size=25):
         stdout.write('\r {}/{}'.format(i_batch + 1, num_batches))
         stdout.flush()
 
-        accuracy = sess.run(network.get_performance(), feed_dict={network.input: batch_x, network.label: batch_y})
+        accuracy = sess.run(network.get_performance(), feed_dict={network.input: batch_x, network.label: batch_y,
+                                                                  network.keep_dims: 1.})
         accuracy_batches[i_batch] = accuracy
     print
     return accuracy_batches
@@ -122,7 +123,8 @@ def train_network(data, y, affine, id_train, id_valid, id_test, network, save_pa
                 stdout.write('\r {}/{}'.format(id_batch + 1, num_batches_train))
                 stdout.flush()
 
-                sess.run(train_op, feed_dict={network.input: batch_x, network.label: batch_y})
+                sess.run(train_op, feed_dict={network.input: batch_x, network.label: batch_y,
+                                              network.keep_dims: 0.5})
 
             print
             print 'Validation...'
