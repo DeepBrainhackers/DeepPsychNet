@@ -1,5 +1,5 @@
 import numpy as np
-import nibabel as ni
+import nibabel as nib
 import os
 
 
@@ -12,22 +12,24 @@ def to_native_coords(y_file, affine_rand_rot, mm_mni):
      /// Code adapted from John Ashburner (private comm)
      :return: coordinates in native space.
     """
+    if mm_mni.ndim == 1:
+        mm_mni = mm_mni[:, np.newaxis]
 
-    V = ni.load(y_file)
-    iM = np.linalg.inv(V.affine).dot(affine_rand_rot)
-    warp_field = V.get_data()
+    V = nib.load(y_file)
+    iM = np.linalg.inv(V.affine.dot(affine_rand_rot))
+    warp_field = np.array(V.get_data(), dtype=np.float)
 
-    mm_mni.shape = (3,1) # Ensure column vector
-    vx_mni = np.dot(iM[:3, :], np.vstack((mm_mni, 1)))
+    vx_mni = np.dot(iM[:3, :], np.vstack((mm_mni, np.ones(mm_mni.shape[1])))).squeeze()
 
-    x, y, z = list(vx_mni.flatten().astype(int))
+    x, y, z = vx_mni[0], vx_mni[1], vx_mni[2]
 
     X = warp_field[..., 0]
     Y = warp_field[..., 1]
     Z = warp_field[..., 2]
 
-    # float converts from memmap object
-    mm_native = [float(X[x, y, z]), float(Y[x, y, z]), float(Z[x, y, z])]
+    mm_native = np.array([X[x, y, z], Y[x, y, z], Z[x, y, z]])
+    if mm_native.ndim == 1:
+        mm_native = mm_native[:, np.newaxis]
 
     return mm_native
 
