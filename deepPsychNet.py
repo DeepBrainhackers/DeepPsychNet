@@ -6,7 +6,7 @@ from tensorflow.contrib.layers import flatten
 class DeepPsychNet(object):
 
     def __init__(self, X, y, n_classes, conv_layers_params, max_pool_layers_params, fc_layers_params,
-                 init_mu=0., init_sigma=0.1):
+                 init_mu=0., init_sigma=0.1, dropout=True):
         assert len(conv_layers_params) == len(max_pool_layers_params), 'Expects same number of ' \
                                                                        'convolutional/max-pooling layers'
 
@@ -24,6 +24,7 @@ class DeepPsychNet(object):
         self.fc_params = fc_layers_params
         self.num_layers_fc = len(fc_layers_params)
         self.num_layers = self.num_layers_conv + self.num_layers_fc
+        self.dropout = dropout
 
         self.network = self.initialize_network()
 
@@ -54,6 +55,9 @@ class DeepPsychNet(object):
             # Activation.
             conv = tf.nn.relu(conv)
 
+            if self.dropout and (id_layer == (self.num_layers_conv - 1)):
+                conv = tf.nn.dropout(conv, 0.5)
+
             # Pooling
             input_to_layer = tf.nn.max_pool3d(conv, ksize=ksize, strides=strides, padding='VALID')
 
@@ -66,7 +70,7 @@ class DeepPsychNet(object):
             fc_params_layer = self.fc_params[id_layer]
             shape_layer = fc_params_layer['shape']
 
-            # Layer 3: Fully Connected. Input = previous. Output = 120.
+            # Fully Connected Layers. Input = previous. Output = 120.
             fc_W = tf.Variable(tf.truncated_normal(shape=shape_layer, mean=self.init_mu, stddev=self.init_sigma))
             fc_b = tf.Variable(tf.zeros(shape_layer[-1]))
 
@@ -77,6 +81,9 @@ class DeepPsychNet(object):
                 input_to_layer = tf.nn.relu(fc)
             else:
                 output_network = fc
+
+            if self.dropout and (id_layer == 1):
+                input_to_layer = tf.nn.dropout(input_to_layer, 0.5)
 
         return output_network
 
