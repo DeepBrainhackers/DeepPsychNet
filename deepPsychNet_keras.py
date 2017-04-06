@@ -49,7 +49,7 @@ def conv_layers(model, conv_params, max_pool_params, i=1):
 
     model.add(Conv3D(name='conv{}'.format(i), **conv_params))
     model.add(BatchNormalization(name='bn{}'.format(i)))
-    model.add(Activation('relu'))
+    model.add(Activation('relu', name='conv{}_relu'.format(i)))
     model.add(MaxPooling3D(name='maxpool{}'.format(i), **max_pool_params))
     return model
 
@@ -64,9 +64,9 @@ def fully_connected(model, fc_params, dropout=False, i=1, final_layer=False):
     model.add(Dense(name='fc{}'.format(i), **fc_params))
 
     if not final_layer:
-        model.add(Activation('relu'))
+        model.add(Activation('relu', name='fc{}_relu'.format(i)))
     else:
-        model.add(Activation('softmax'))
+        model.add(Activation('softmax', name='final_layer_softmax'))
 
     if dropout:
         model.add(Dropout(rate=dropout, name='dropout{}'.format(i)))
