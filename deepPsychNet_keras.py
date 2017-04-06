@@ -1,9 +1,9 @@
 from keras.layers import Conv3D, Dropout, InputLayer, Dense, MaxPooling3D, BatchNormalization, Flatten, Activation
 from keras.models import Sequential
-import tensorflow as tf
+import keras.backend as K
 
 
-def deep_psych_net(input_shape, conv_params, max_pool_params, fc_params, dropout_params, input_dtype=tf.float32):
+def deep_psych_net(input_shape, conv_params, max_pool_params, fc_params, dropout_params, input_dtype=K.floatx()):
     """
     :param input_shape:         (nx, ny, nz, 1)
     :param conv_params:         list of dictionaries (each dictionary a layer)
@@ -66,7 +66,7 @@ def fully_connected(model, fc_params, dropout=False, i=1, final_layer=False):
     if not final_layer:
         model.add(Activation('relu', name='fc{}_relu'.format(i)))
     else:
-        model.add(Activation('softmax', name='final_layer_softmax'))
+        model.add(Activation('softmax', name='final_softmax'))
 
     if dropout:
         model.add(Dropout(rate=dropout, name='dropout{}'.format(i)))
@@ -74,9 +74,9 @@ def fully_connected(model, fc_params, dropout=False, i=1, final_layer=False):
     return model
 
 
-def init_network_test():
+def init_network():
     input_shape = (91, 109, 91, 1)
-    input_dtype = tf.float32
+    input_dtype = K.floatx()
 
     conv_params = [
         {'filters': 64, "kernel_size": (7, 7, 7), "strides": (3, 3, 3)},
@@ -97,8 +97,26 @@ def init_network_test():
     dropout_params = {2: 0.5}
 
     model = deep_psych_net(input_shape, conv_params, maxpooling_params, fc_params, dropout_params, input_dtype)
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy', balanced_accuracy])
+    return model
+
+
+def balanced_accuracy(y_true, y_pred):
+    """
+    Assumes that y_true is one-hot encoded and y_pred is the softmax output of the network
+    
+    :param y_true: 
+    :param y_pred: 
+    :return: 
+    """
+    y_pred_onehot = K.one_hot(K.argmax(y_pred, axis=1), num_classes=2)
+    return K.mean(K.sum(y_true * y_pred_onehot, axis=0) / K.sum(y_true, axis=0))
+
+
+def test_network():
+    model = init_network()
     model.summary()
 
 
 if __name__ == '__main__':
-    init_network_test()
+    test_network()
