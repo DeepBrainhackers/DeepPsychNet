@@ -4,7 +4,6 @@ import os.path as osp
 
 import h5py
 import numpy as np
-import tensorflow as tf
 from sklearn.model_selection import train_test_split
 
 # from deepPsychNet import DeepPsychNet
@@ -47,7 +46,6 @@ def create_train_validation_test_set(data, y, num_test=100, num_valid=100):
 
 def evaluate(data, y_data, id_to_take, network, affine, batch_size=25):
     num_examples = id_to_take.size
-    sess = tf.get_default_session()
     num_batches = int(np.ceil(num_examples/float(batch_size)))
     num_performance_metrics = len(network.metrics_names)
 
@@ -71,7 +69,6 @@ def evaluate(data, y_data, id_to_take, network, affine, batch_size=25):
 
 def train_network(data, y, affine, id_train, id_valid, id_test, network, save_path, model_folder, model_name,
                   batch_size=25, num_epochs=20, num_augmentation=1):
-    saver = tf.train.Saver()
 
     num_batches_train = int(np.ceil(id_train.size/((float(batch_size)/num_augmentation))))
     num_batches_train_validation = int(np.ceil(id_train.size/(float(batch_size))))
