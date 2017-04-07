@@ -10,6 +10,7 @@ from keras.utils import to_categorical
 # from deepPsychNet import DeepPsychNet
 from deepPsychNet_keras import init_network as get_keras_network
 from imageTransformer3d import ImageTransformer3d
+from time import time
 
 
 def run():
@@ -93,6 +94,7 @@ def train_network(data, y, affine, id_train, id_valid, id_test, network, save_pa
     print
 
     for id_epoch in xrange(num_epochs):
+        t1_epoch = time()
         print 'EPOCH {}/{}:'.format(id_epoch + 1, num_epochs)
 
         image_iterator_transformer = ImageTransformer3d(data_obj=data, affine=affine, y_label=y,
@@ -100,12 +102,18 @@ def train_network(data, y, affine, id_train, id_valid, id_test, network, save_pa
                                                         num_augmentation_set=num_augmentation, shuffle=True)
         image_generator = image_iterator_transformer.iter()
 
+        time_taken = 0.
         for id_batch, (batch_x, batch_y, affine_train) in enumerate(image_generator):
-            stdout.write('\r {}/{}'.format(id_batch + 1, num_batches_train))
+            t1_batch = time()
+
+            stdout.write('\r {}/{}; time-taken {:.2f}m'.format(id_batch + 1, num_batches_train, time_taken))
             stdout.flush()
 
             batch_y = to_categorical(batch_y, num_classes=2)
             network.train_on_batch(batch_x, batch_y)
+            t2_batch = time()
+
+            time_taken = (t2_batch - t1_batch)/60.
 
         print
         print 'Validation...'
@@ -122,6 +130,9 @@ def train_network(data, y, affine, id_train, id_valid, id_test, network, save_pa
         print_metrics(metrics_test[:, id_epoch, :].mean(axis=0), network.metrics_names)
 
         network.save(osp.join(model_save, model_name + '_epoch_{}.h5'.format(id_epoch + 1)))
+        t2_epoch = time()
+
+        print 'Epoch: time-taken {:.2f}'.format((t2_epoch - t1_epoch)/60.)
 
     np.savez_compressed(osp.join(model_save, 'metrics_model.npz'), metrics_train=metrics_train,
                         metrics_valid=metrics_valid, metrics_test=metrics_test, metrics_names=network.metrics_names)
@@ -131,7 +142,7 @@ def train_network(data, y, affine, id_train, id_valid, id_test, network, save_pa
 def print_metrics(metrics_array, metric_names):
     print_str = ''
     for i in xrange(len(metric_names)):
-        print_str += '{}: {:.2f} '.format(metric_names[i], metrics_array[i])
+        print_str += '{}: {:.4f} '.format(metric_names[i], metrics_array[i])
     print print_str
 
 
