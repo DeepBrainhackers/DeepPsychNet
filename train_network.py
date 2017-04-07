@@ -5,6 +5,7 @@ import os.path as osp
 import h5py
 import numpy as np
 from sklearn.model_selection import train_test_split
+from keras.utils import to_categorical
 
 # from deepPsychNet import DeepPsychNet
 from deepPsychNet_keras import init_network as get_keras_network
@@ -13,7 +14,7 @@ from imageTransformer3d import ImageTransformer3d
 
 def run():
     hdf5_file = '/home/rthomas/BrainHack/dataHDF5/abide.hdf5'
-    save_folder = '/home/rthomas/BrainHack/dataHDF5/DeepPsychNet'
+    save_folder = '/home/rthomas/BrainHack/DeepPsychNet'
     model_folder = 'lenet3d'
     model_name = 'lenet3d'
     batch_size = 25
@@ -60,6 +61,7 @@ def evaluate(data, y_data, id_to_take, network, affine, batch_size=25):
         stdout.write('\r {}/{}'.format(i_batch + 1, num_batches))
         stdout.flush()
 
+        batch_y = to_categorical(batch_y, num_classes=2)
         metrics = network.test_on_batch(batch_x, batch_y)
         metrics_batches[i_batch, :] = metrics
 
@@ -102,6 +104,7 @@ def train_network(data, y, affine, id_train, id_valid, id_test, network, save_pa
             stdout.write('\r {}/{}'.format(id_batch + 1, num_batches_train))
             stdout.flush()
 
+            batch_y = to_categorical(batch_y, num_classes=2)
             network.train_on_batch(batch_x, batch_y)
 
         print

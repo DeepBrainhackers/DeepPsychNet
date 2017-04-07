@@ -126,9 +126,8 @@ def balanced_accuracy(y_true, y_pred):
     :param y_pred: 
     :return: 
     """
-    y_true_onehot = K.one_hot(K.cast(y_true, 'int32'), num_classes=2)
     y_pred_onehot = K.one_hot(K.argmax(y_pred, axis=1), num_classes=2)
-    return K.mean(K.sum(y_true_onehot * y_pred_onehot, axis=0) / K.sum(y_true_onehot, axis=0))
+    return K.mean(K.sum(y_true * y_pred_onehot, axis=0) / K.sum(y_true, axis=0))
 
 
 def test_network():
