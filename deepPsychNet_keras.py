@@ -1,15 +1,17 @@
-from keras.layers import Conv3D, Dropout, InputLayer, Dense, MaxPooling3D, BatchNormalization, Flatten, Activation
-from keras.models import Sequential
+from keras.layers import Conv3D, Dropout, Input, Dense, MaxPooling3D, BatchNormalization, Flatten, Activation
+from keras.models import Model
 import keras.backend as K
 
 
-def deep_psych_net(input_shape, conv_params, max_pool_params, fc_params, dropout_params, input_dtype=K.floatx()):
+def deep_psych_net(input_shape, conv_params, max_pool_params, fc_params, dropout_params, ouput_layer_params,
+                   input_dtype=K.floatx()):
     """
     :param input_shape:         (nx, ny, nz, 1)
     :param conv_params:         list of dictionaries (each dictionary a layer)
     :param max_pool_params:     list of dictionaries (each dictionary a layer)
     :param fc_params:           list of dictionaries (each dictionary a layer)
     :param dropout_params:      dictionary: {fc_layer_number: dropout_value}, starting from 1 or None
+    :param ouput_layer_params:        list of dictionaries (each dictionary a final layer)
     :param input_dtype:         default: tf.float32               
     :return: 
     """
@@ -20,26 +22,36 @@ def deep_psych_net(input_shape, conv_params, max_pool_params, fc_params, dropout
 
     n_conv = len(conv_params)
     n_fc = len(fc_params)
+    n_output = len(ouput_layer_params)
 
-    model = Sequential()
-    model.add(InputLayer(input_shape=input_shape, batch_size=None, dtype=input_dtype, name='input_layer'))
+    input_to_network = Input(input_shape, batch_shape=None, dtype=input_dtype, name='input_layer')
+    layer_input = input_to_network
 
     for i in xrange(n_conv):
         conv_layer_params = conv_params[i]
         max_pool_layer_params = max_pool_params[i]
-        model = conv_layers(model, conv_layer_params, max_pool_layer_params, i=i+1)
+        layer_input = conv_layers(layer_input, conv_layer_params, max_pool_layer_params, i=i+1)
 
-    model.add(Flatten(name='flatten'))
+    layer_input = Flatten(name='flatten')(layer_input)
 
     for i in xrange(n_fc):
         fc_layer_params = fc_params[i]
         dropout_val = dropout_params.get(i + 1, False)
+        layer_input = fully_connected(layer_input, fc_layer_params, dropout=dropout_val, i=i+1)
 
-        model = fully_connected(model, fc_layer_params, dropout=dropout_val, i=i+1, final_layer=(i + 1) == n_fc)
-    return model
+    outputs_network = []
+    for i in xrange(n_output):
+        output_layer_params = ouput_layer_params[i]
+        outputs_network.append(output_layers(layer_input, output_layer_params, i=i+1))
+
+    return Model(inputs=input_to_network, outputs=outputs_network)
 
 
-def conv_layers(model, conv_params, max_pool_params, i=1):
+def output_layers(x, layer_params, i=1):
+    return Dense(name='output{}'.format(i), **layer_params)(x)
+
+
+def conv_layers(x, conv_params, max_pool_params, i=1):
     # Our convolutional layers will always be comprised of
     #
     # 1. conv-layer (without non-linearity)
@@ -47,31 +59,26 @@ def conv_layers(model, conv_params, max_pool_params, i=1):
     # 3. non-linear activation (relu)
     # 4. max-pooling
 
-    model.add(Conv3D(name='conv{}'.format(i), **conv_params))
-    model.add(BatchNormalization(name='bn{}'.format(i)))
-    model.add(Activation('relu', name='conv{}_relu'.format(i)))
-    model.add(MaxPooling3D(name='maxpool{}'.format(i), **max_pool_params))
-    return model
+    x = Conv3D(name='conv{}'.format(i), **conv_params)(x)
+    x = BatchNormalization(name='bn{}'.format(i))(x)
+    x = Activation('relu', name='conv{}_relu'.format(i))(x)
+    x = MaxPooling3D(name='maxpool{}'.format(i), **max_pool_params)(x)
+    return x
 
 
-def fully_connected(model, fc_params, dropout=False, i=1, final_layer=False):
+def fully_connected(x, fc_params, dropout=False, i=1, final_layer=False):
     # Fully connected layers
     #
     # 1. Dense layer (with linear activation)
     # 2. Non-linear activation (relu if not final_layer, or softmax for final_layer)
     # 3. (optional) Dropout
 
-    model.add(Dense(name='fc{}'.format(i), **fc_params))
-
-    if not final_layer:
-        model.add(Activation('relu', name='fc{}_relu'.format(i)))
-    else:
-        model.add(Activation('softmax', name='final_softmax'))
+    x = Dense(name='fc{}'.format(i), **fc_params)(x)
+    x = Activation('relu', name='fc{}_relu'.format(i))(x)
 
     if dropout:
-        model.add(Dropout(rate=dropout, name='dropout{}'.format(i)))
-
-    return model
+        x = Dropout(rate=dropout, name='dropout{}'.format(i))(x)
+    return x
 
 
 def init_network(n_classes=2):
@@ -89,15 +96,25 @@ def init_network(n_classes=2):
     fc_params = [
         {'units': 1000},
         {'units': 100},
-        {'units': n_classes}
     ]
+
+    output_params = [
+        {'units': n_classes, 'activation': 'softmax'} #,
+        # {'units': 20, 'activation': 'linear'}
+    ]
+
+    loss = 'categorical_crossentropy'
+    loss_weights = None
+    # loss = ['categorical_crossentropy', 'mean_squared_error']
+    # loss_weights = [1., 0.001]
 
     # dropout_params = None
     # dropout_params = {1: 0.9, 2: 0.5}
     dropout_params = {2: 0.5}
 
-    model = deep_psych_net(input_shape, conv_params, maxpooling_params, fc_params, dropout_params, input_dtype)
-    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy', balanced_accuracy])
+    model = deep_psych_net(input_shape, conv_params, maxpooling_params, fc_params, dropout_params, output_params,
+                           input_dtype)
+    model.compile(optimizer='adam', loss=loss, metrics=['accuracy', balanced_accuracy], loss_weights=loss_weights)
     return model
 
 
