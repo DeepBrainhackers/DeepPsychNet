@@ -74,7 +74,7 @@ def fully_connected(model, fc_params, dropout=False, i=1, final_layer=False):
     return model
 
 
-def init_network():
+def init_network(n_classes=2):
     input_shape = (91, 109, 91, 1)
     input_dtype = K.floatx()
 
@@ -89,7 +89,7 @@ def init_network():
     fc_params = [
         {'units': 1000},
         {'units': 100},
-        {'units': 2}
+        {'units': n_classes}
     ]
 
     # dropout_params = None
@@ -103,14 +103,15 @@ def init_network():
 
 def balanced_accuracy(y_true, y_pred):
     """
-    Assumes that y_true is one-hot encoded and y_pred is the softmax output of the network
+    Assumes y_pred is the softmax output of the network
     
     :param y_true: 
     :param y_pred: 
     :return: 
     """
+    y_true_onehot = K.one_hot(K.cast(y_true, 'int32'), num_classes=2)
     y_pred_onehot = K.one_hot(K.argmax(y_pred, axis=1), num_classes=2)
-    return K.mean(K.sum(y_true * y_pred_onehot, axis=0) / K.sum(y_true, axis=0))
+    return K.mean(K.sum(y_true_onehot * y_pred_onehot, axis=0) / K.sum(y_true_onehot, axis=0))
 
 
 def test_network():
