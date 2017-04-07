@@ -3,7 +3,7 @@ from keras.models import Model
 import keras.backend as K
 
 
-def deep_psych_net(input_shape, conv_params, max_pool_params, fc_params, dropout_params, ouput_layer_params,
+def deep_psych_net(input_shape, conv_params, max_pool_params, fc_params, dropout_params, output_params,
                    input_dtype=K.floatx()):
     """
     :param input_shape:         (nx, ny, nz, 1)
@@ -11,7 +11,7 @@ def deep_psych_net(input_shape, conv_params, max_pool_params, fc_params, dropout
     :param max_pool_params:     list of dictionaries (each dictionary a layer)
     :param fc_params:           list of dictionaries (each dictionary a layer)
     :param dropout_params:      dictionary: {fc_layer_number: dropout_value}, starting from 1 or None
-    :param ouput_layer_params:        list of dictionaries (each dictionary a final layer)
+    :param output_params:        list of dictionaries (each dictionary a final layer)
     :param input_dtype:         default: tf.float32               
     :return: 
     """
@@ -22,7 +22,7 @@ def deep_psych_net(input_shape, conv_params, max_pool_params, fc_params, dropout
 
     n_conv = len(conv_params)
     n_fc = len(fc_params)
-    n_output = len(ouput_layer_params)
+    n_output = len(output_params)
 
     input_to_network = Input(input_shape, batch_shape=None, dtype=input_dtype, name='input_layer')
     layer_input = input_to_network
@@ -41,7 +41,7 @@ def deep_psych_net(input_shape, conv_params, max_pool_params, fc_params, dropout
 
     outputs_network = []
     for i in xrange(n_output):
-        output_layer_params = ouput_layer_params[i]
+        output_layer_params = output_params[i]
         outputs_network.append(output_layers(layer_input, output_layer_params, i=i+1))
 
     return Model(inputs=input_to_network, outputs=outputs_network)
