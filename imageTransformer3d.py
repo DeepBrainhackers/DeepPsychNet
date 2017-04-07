@@ -62,7 +62,7 @@ class ImageTransformer3d(object):
         batch_size = num_orig_images * self.num_augmentations
 
         axis_to_rotate = np.random.randint(1, 4, size=(num_orig_images, self.num_augmentations - 1))
-        angle_to_rotate = np.random.randint(1, 181, size=(num_orig_images, self.num_augmentations - 1))
+        angle_to_rotate = np.random.randint(1, 11, size=(num_orig_images, self.num_augmentations - 1))
 
         data_new = np.zeros(((batch_size, ) + data_to_augment.shape[1:]), dtype=data_to_augment.dtype)
         affine_new = np.zeros(((batch_size, ) + affine_for_augment.shape[1:]), dtype=affine_for_augment.dtype)
