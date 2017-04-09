@@ -72,10 +72,16 @@ class ImageTransformer3d(object):
 
         for id_new, (id_img, id_augment) in enumerate(product(xrange(num_orig_images), xrange(self.num_augmentations - 1))):
             id_new += num_orig_images
+            max_orig, min_orig = data_to_augment[id_img, ...].max(), data_to_augment[id_img, ...].min()
+
             data_new[id_new, ..., 0], affine_new[id_new, ...] = rotate_brain(data_to_augment[id_img, ...].squeeze(),
                                                                           angle_to_rotate[id_img, id_augment],
                                                                           axis_to_rotate[id_img, id_augment],
                                                                           affine_for_augment[id_img, ...])
+            # http://stackoverflow.com/a/11121189 for the scaling
+            # scales data_new to range min_orig to max_orig
+            data_new[id_new, ...] = min_orig + (max_orig - min_orig)/(data_new[id_new].max() - data_new.min()) * \
+                                               (data_new[id_new] - data_new[id_new].min())
 
         return data_new, y, affine_new
 
