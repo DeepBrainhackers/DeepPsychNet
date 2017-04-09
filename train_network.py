@@ -31,21 +31,6 @@ def init_network(batch_size=None, n_classes=2):
     return get_keras_network(n_classes=n_classes)
 
 
-def create_train_validation_test_set(data, y, num_test=100, num_valid=100):
-    """
-    Define training, validation, test set
-    :param data:
-    :param y:
-    :param num_test:
-    :param num_valid:
-    :return:
-    """
-    data_train, data_test, y_train, y_test = train_test_split(data, y, test_size=num_test, stratify=y)
-    data_train, data_valid, y_train, y_valid = train_test_split(data_train, y_train, test_size=num_valid,
-                                                                stratify=y_train)
-    return data_train, data_valid, data_test
-
-
 def evaluate(data, y_data, id_to_take, network, affine, batch_size=25):
     num_examples = id_to_take.size
     num_batches = int(np.ceil(num_examples/float(batch_size)))
@@ -104,16 +89,11 @@ def train_network(data, y, affine, id_train, id_valid, id_test, network, save_pa
 
         time_taken = 0.
         for id_batch, (batch_x, batch_y, affine_train) in enumerate(image_generator):
-            t1_batch = time()
-
             stdout.write('\r {}/{}; time-taken {:.2f}m'.format(id_batch + 1, num_batches_train, time_taken))
             stdout.flush()
 
             batch_y = to_categorical(batch_y, num_classes=2)
             network.train_on_batch(batch_x, batch_y)
-            t2_batch = time()
-
-            time_taken = (t2_batch - t1_batch)/60.
 
         print
         print 'Validation...'
@@ -154,8 +134,7 @@ def iterate_and_train(hdf5_file_path, save_path, model_folder='model', model_nam
         dataT1 = hdf5_file['dataT1']
         affine = hdf5_file['dataAffine']
         y_labels = dataT1.attrs['labels_subj'].astype(np.int32)
-        id_subj = np.arange(dataT1.shape[0])
-        id_train, id_valid, id_test = create_train_validation_test_set(id_subj, y_labels, num_test=100, num_valid=100)
+        id_train, id_valid, id_test = dataT1.attrs['id_train'], dataT1.attrs['id_valid'], dataT1.attrs['id_test']
         train_network(dataT1, y_labels, affine, id_train, id_valid, id_test, network, save_path, model_folder,
                       model_name, batch_size=batch_size, num_epochs=num_epochs, num_augmentation=num_augmentation)
 

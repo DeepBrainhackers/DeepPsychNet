@@ -40,8 +40,7 @@ def rotate_brain(image_data, angle, axis, affine_matrix):
     #offset in the center
     center = 0.5*np.array(image_data.shape)
     offset = center - center.dot(new_affine[:3,:3])        
-    rotated_data = affine_transform(image_data, new_affine[0:3,0:3:].T, offset=offset, order=4,
-                                    prefilter=True)
+    rotated_data = affine_transform(image_data, new_affine[0:3,0:3:].T, offset=offset, order=1)
     
     return rotated_data, new_affine
 
