@@ -14,7 +14,7 @@ from time import time
 
 
 def run():
-    hdf5_file = '/home/rthomas/BrainHack/dataHDF5/abide.hdf5'
+    hdf5_file = '/home/rthomas/BrainHack/DeepPsychNet/dataHDF5/abide.hdf5'
     save_folder = '/home/rthomas/BrainHack/DeepPsychNet'
     model_folder = 'lenet3d'
     model_name = 'lenet3d'

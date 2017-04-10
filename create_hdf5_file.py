@@ -7,6 +7,7 @@ from time import time
 import h5py
 import nibabel as nib
 import numpy as np
+from data_handling import run as run_zscaling
 
 
 def ensure_folder(folder_dir):
@@ -75,10 +76,11 @@ def run():
     directory_data = '/home/rthomas/abide/dataProcessed'
     sub_folders = ('ASD', 'CON')
     save_folder = '/home/rthomas/BrainHack/DeepPsychNet/dataHDF5'
-    save_file = 'abide_new.hdf5'
+    save_file = 'abide.hdf5'
     img_pattern = '*T1_shft_res.nii'
     create_hdf5_file(directory_data, sub_folders, save_directory=save_folder, save_path=save_file,
                      nifit_ending=img_pattern)
+    run_zscaling(osp.join(save_folder, save_file))
 
 
 if __name__ == '__main__':
