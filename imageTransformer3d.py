@@ -53,7 +53,7 @@ class ImageTransformer3d(object):
         y = self.y[id_minibatch]
         y = np.concatenate((y, np.repeat(y, self.num_augmentations - 1)))
 
-        data_to_augment = self.data[id_minibatch, ...]
+        data_to_augment = self.atleast_5d(self.data[id_minibatch, ...])
         affine_for_augment = self.affine[id_minibatch, ...]
 
         if id_minibatch.size != num_orig_images:
