@@ -80,7 +80,8 @@ class ImageTransformer3d(object):
                                                                           affine_for_augment[id_img, ...])
             # http://stackoverflow.com/a/11121189 for the scaling
             # scales data_new to range min_orig, max_orig
-            data_new[id_new, ...] = min_orig + (max_orig - min_orig)/(data_new[id_new].max() - data_new.min()) * \
+            data_new[id_new, ...] = min_orig + (max_orig - min_orig)/\
+                                               (data_new[id_new].max() - data_new[id_new].min()) * \
                                                (data_new[id_new] - data_new[id_new].min())
 
         return data_new, y, affine_new
