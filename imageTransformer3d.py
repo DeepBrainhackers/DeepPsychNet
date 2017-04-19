@@ -1,10 +1,10 @@
 import numpy as np
 from itertools import product
-from rotate_translate_brain import rotate_brain
+from rotate_translate_brain import rotate_brain, shift_brain
 
 class ImageTransformer3d(object):
 
-    def __init__(self, data_obj, affine, y_label, id_data, batch_size, num_augmentation_set=1, shuffle=True):
+    def __init__(self, data_obj, affine, y_label, id_data, batch_size, type_augmentation, num_augmentation_set=1, shuffle=True):
 
         assert batch_size % num_augmentation_set == 0, 'The number of augmentations per image has to be a multiple of batch_size'
 
@@ -17,6 +17,7 @@ class ImageTransformer3d(object):
         self.shuffle = shuffle
         self.num_augmentations = num_augmentation_set
         self.affine = affine
+        self.type_augmentation = type_augmentation
 
     def iter(self):
         id_data = self.id_data
@@ -61,8 +62,14 @@ class ImageTransformer3d(object):
 
         batch_size = num_orig_images * self.num_augmentations
 
-        axis_to_rotate = np.random.randint(1, 4, size=(num_orig_images, self.num_augmentations - 1))
-        angle_to_rotate = np.random.randint(1, 11, size=(num_orig_images, self.num_augmentations - 1))
+        axis_to_transform = np.random.randint(0, 3, size=(num_orig_images, self.num_augmentations - 1))
+        
+        if self.type_augmentation == 'rotation':        
+            angle_to_rotate = np.random.randint(1, 11, size=(num_orig_images, self.num_augmentations - 1))
+        elif self.type_augmentation == 'translation':
+            shift_to_translate = np.random.randint(1, 20, size=(num_orig_images, self.num_augmentations -1))
+        else:
+            raise RuntimeError('type_augmentation has to be rotations or translation but {} was given'.format(self.type_augmentation))
 
         data_new = np.zeros(((batch_size, ) + data_to_augment.shape[1:]), dtype=data_to_augment.dtype)
         affine_new = np.zeros(((batch_size, ) + affine_for_augment.shape[1:]), dtype=affine_for_augment.dtype)
@@ -74,10 +81,17 @@ class ImageTransformer3d(object):
             id_new += num_orig_images
             max_orig, min_orig = data_to_augment[id_img, ...].max(), data_to_augment[id_img, ...].min()
 
-            data_new[id_new, ..., 0], affine_new[id_new, ...] = rotate_brain(data_to_augment[id_img, ...].squeeze(),
+            if self.type_augmentation == 'rotation':
+                data_new[id_new, ..., 0], affine_new[id_new, ...] = rotate_brain(data_to_augment[id_img, ...].squeeze(),
                                                                           angle_to_rotate[id_img, id_augment],
-                                                                          axis_to_rotate[id_img, id_augment],
+                                                                          axis_to_transform[id_img, id_augment],
                                                                           affine_for_augment[id_img, ...])
+            elif self.type_augmentation == 'translation':
+                data_new[id_new, ..., 0], affine_new[id_new, ...] = shift_brain(data_to_augment[id_img, ...].squeeze(),
+                                                                            shift_to_translate[id_img, id_augment],
+                                                                            axis_to_transform[id_img, id_augment],
+                                                                            affine_for_augment[id_img, ...])
+                
             # http://stackoverflow.com/a/11121189 for the scaling
             # scales data_new to range min_orig, max_orig
             data_new[id_new, ...] = min_orig + (max_orig - min_orig)/\
