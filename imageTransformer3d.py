@@ -22,7 +22,7 @@ class ImageTransformer3d(object):
         id_data = self.id_data
 
         if self.shuffle:
-            np.random.shuffle(self.id_data)
+            np.random.shuffle(id_data)
 
         if self.augment:
             gen = self.__iter_augment(id_data)
