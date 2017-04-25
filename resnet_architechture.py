@@ -1,4 +1,4 @@
-from keras.layers import Conv3D, BatchNormalization, Activation, MaxPool3D, Dense, Concatenate, Input, Add
+from keras.layers import Conv3D, BatchNormalization, Activation, MaxPool3D, Dense, Input, Add, Flatten
 from keras.models import Model
 from deepPsychNet_keras import balanced_accuracy
 
@@ -57,6 +57,7 @@ def ResNet():
     add6 = Add(name='add6')([add5, block6])
 
     x = MaxPool3D(pool_size=(7, 7, 7))(add6)
+    x = Flatten(name='flatten')(x)
     x = Dense(units=128, activation='relu')(x)
     output = Dense(units=2, activation='softmax')(x)
 
