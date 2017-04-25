@@ -86,6 +86,7 @@ def train_network(data, y, affine, id_train, id_valid, id_test, network, save_pa
 
         image_iterator_transformer = ImageTransformer3d(data_obj=data, affine=affine, y_label=y,
                                                         id_data=id_train, batch_size=batch_size,
+                                                        type_augmentation='translation',
                                                         num_augmentation_set=num_augmentation, shuffle=True)
         image_generator = image_iterator_transformer.iter()
 

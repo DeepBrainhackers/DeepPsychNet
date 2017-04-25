@@ -4,7 +4,8 @@ from rotate_translate_brain import rotate_brain, shift_brain
 
 class ImageTransformer3d(object):
 
-    def __init__(self, data_obj, affine, y_label, id_data, batch_size, type_augmentation, num_augmentation_set=1, shuffle=True):
+    def __init__(self, data_obj, affine, y_label, id_data, batch_size, type_augmentation=None, num_augmentation_set=1,
+                 shuffle=True):
 
         assert batch_size % num_augmentation_set == 0, 'The number of augmentations per image has to be a multiple of batch_size'
 
