@@ -20,7 +20,7 @@ def run():
     model_folder = 'lenet3d'
     model_name = 'lenet3d'
     batch_size = 25
-    num_epochs = 20
+    num_epochs = 200
     # if 1 no augmentation will be performed. Has to be a multiple of batch_size otherwise
     num_augmentations = 5
 
