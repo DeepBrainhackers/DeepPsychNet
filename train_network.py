@@ -11,6 +11,7 @@ from keras.utils import to_categorical
 from deepPsychNet_keras import init_network as get_keras_network
 from imageTransformer3d import ImageTransformer3d
 from time import time
+from resnet_architechture import ResNet
 
 
 def run():
@@ -28,7 +29,8 @@ def run():
 
 
 def init_network(batch_size=None, n_classes=2):
-    return get_keras_network(n_classes=n_classes)
+    # return get_keras_network(n_classes=n_classes
+    return ResNet()
 
 
 def evaluate(data, y_data, id_to_take, network, affine, batch_size=25):
