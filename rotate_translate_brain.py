@@ -19,16 +19,16 @@ def rotate_brain(image_data, angle, axis, affine_matrix):
 
     if axis == 0:
         rotation = np.array([[1, 0, 0, 0],
-                             [0, np.cos(angle), -1*np.sin(angle), 0],
+                             [0, np.cos(angle), -np.sin(angle), 0],
                              [0, np.sin(angle), np.cos(angle), 0],
                              [0, 0, 0, 1]])
     elif axis==1:
         rotation = np.array([[np.cos(angle), 0, np.sin(angle), 0],
                              [0, 1, 0, 0],
-                             [-1*np.sin(angle), 0, np.cos(angle), 0],
+                             [-np.sin(angle), 0, np.cos(angle), 0],
                              [0, 0, 0, 1]])
     elif axis==2:
-        rotation = np.array([[np.cos(angle), -1*np.sin(angle), 0, 0],
+        rotation = np.array([[np.cos(angle), -np.sin(angle), 0, 0],
                              [np.sin(angle), np.cos(angle), 0, 0],
                              [0, 0, 1, 0],
                              [0, 0, 0, 1]])
