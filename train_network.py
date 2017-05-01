@@ -106,11 +106,11 @@ def train_network(data, y, affine, id_train, id_valid, id_test, network, save_pa
 
         print
         print 'Training: '
-        print_metrics(metrics_train[:, id_epoch, :].mean(axis=0), network.metrics_names)
+        print_metrics(np.nanmean(metrics_train[:, id_epoch, :], axis=0), network.metrics_names)
         print 'Validation: '
-        print_metrics(metrics_valid[:, id_epoch, :].mean(axis=0), network.metrics_names)
+        print_metrics(np.nanmean(metrics_valid[:, id_epoch, :], axis=0), network.metrics_names)
         print 'Test: '
-        print_metrics(metrics_test[:, id_epoch, :].mean(axis=0), network.metrics_names)
+        print_metrics(np.nanmean(metrics_test[:, id_epoch, :], axis=0), network.metrics_names)
 
         network.save(osp.join(model_save, model_name + '_epoch_{}.h5'.format(id_epoch + 1)))
         t2_epoch = time()
