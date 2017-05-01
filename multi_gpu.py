@@ -23,7 +23,7 @@ def make_parallel(model, gpu_count):
     # Place a copy of the model on each GPU, each getting a slice of the batch
     for i in range(gpu_count):
         with tf.device('/gpu:%d' % i):
-            with tf.name_scope('tower_%d' % i) as scope:
+            with tf.name_scope('tower_%d' % i):
 
                 inputs = []
                 # Slice each input into a piece for processing on this GPU
