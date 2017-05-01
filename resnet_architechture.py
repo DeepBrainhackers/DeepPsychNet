@@ -71,6 +71,7 @@ def ResNet():
     model.summary()
 
     model = make_parallel(model, 2)
+    model.summary()
 
     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy', balanced_accuracy])
     return model
