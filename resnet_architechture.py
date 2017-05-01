@@ -1,6 +1,7 @@
 from keras.layers import Conv3D, BatchNormalization, Activation, MaxPool3D, Dense, Input, Add, Flatten
 from keras.models import Model
 from deepPsychNet_keras import balanced_accuracy
+from multi_gpu import make_parallel
 
 
 def conv_block(x, num_conv, base_name):
@@ -68,6 +69,8 @@ def ResNet():
 
     model = Model(input_layer, output)
     model.summary()
+
+    model = make_parallel(model, 2)
 
     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy', balanced_accuracy])
     return model
