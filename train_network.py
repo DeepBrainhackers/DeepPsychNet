@@ -4,11 +4,11 @@ import os.path as osp
 
 import h5py
 import numpy as np
-from sklearn.model_selection import train_test_split
+# from sklearn.model_selection import train_test_split
 from keras.utils import to_categorical
 
 # from deepPsychNet import DeepPsychNet
-from deepPsychNet_keras import init_network as get_keras_network
+# from deepPsychNet_keras import init_network as get_keras_network
 from imageTransformer3d import ImageTransformer3d
 from time import time
 from resnet_architechture import ResNet
@@ -60,7 +60,7 @@ def evaluate(data, y_data, id_to_take, network, affine, batch_size=25):
 def train_network(data, y, affine, id_train, id_valid, id_test, network, save_path, model_folder, model_name,
                   batch_size=25, num_epochs=20, num_augmentation=1):
 
-    num_batches_train = int(np.ceil(id_train.size/((float(batch_size)/num_augmentation))))
+    num_batches_train = int(np.ceil(id_train.size/(float(batch_size)/num_augmentation)))
     num_batches_train_validation = int(np.ceil(id_train.size/(float(batch_size))))
     num_batches_test = int(np.ceil(id_test.size/float(batch_size)))
     num_batches_valid = int(np.ceil(id_valid.size/float(batch_size)))
@@ -76,7 +76,6 @@ def train_network(data, y, affine, id_train, id_valid, id_test, network, save_pa
     if not osp.exists(model_save):
         os.makedirs(model_save)
 
-
     print "Training..."
     print
 
@@ -90,19 +89,24 @@ def train_network(data, y, affine, id_train, id_valid, id_test, network, save_pa
                                                         num_augmentation_set=num_augmentation, shuffle=True)
         image_generator = image_iterator_transformer.iter()
 
-        time_taken = 0.
+        t1_train = time()
         for id_batch, (batch_x, batch_y, affine_train) in enumerate(image_generator):
-            stdout.write('\r {}/{}; time-taken {:.2f}m'.format(id_batch + 1, num_batches_train, time_taken))
+            stdout.write('\r {}/{}'.format(id_batch + 1, num_batches_train))
             stdout.flush()
 
             batch_y = to_categorical(batch_y, num_classes=2)
             network.train_on_batch(batch_x, batch_y)
-
+        t2_train = time()
+        print
+        print 'Training time epoch: {:.02f}m'.format((t2_train - t1_train)/60.)
         print
         print 'Validation...'
+        print '... for validation set'
         metrics_valid[:, id_epoch, :] = evaluate(data, y, id_valid, network, affine, batch_size=batch_size)
-        metrics_train[:, id_epoch, :] = evaluate(data, y, id_train, network, affine, batch_size=batch_size)
+        print '... for test set'
         metrics_test[:, id_epoch, :] = evaluate(data, y, id_test, network, affine, batch_size=batch_size)
+        print '... for training set'
+        metrics_train[:, id_epoch, :] = evaluate(data, y, id_train, network, affine, batch_size=batch_size)
 
         print
         print 'Training: '
