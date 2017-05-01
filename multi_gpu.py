@@ -15,7 +15,7 @@ def make_parallel(model, gpu_count):
         stride = tf.concat([shape[:1] // parts, shape[1:] * 0], axis=0)
         start = stride * idx
         if (idx + 1) == gpu_count:
-            size = tf.concat([shape[:1] - shape[:1] // parts, shape[1:]], axis=0)
+            size = tf.concat([shape[:1] - (shape[:1] // parts) * (gpu_count - 1), shape[1:]], axis=0)
         return tf.slice(data, start, size)
 
     outputs_all = []
