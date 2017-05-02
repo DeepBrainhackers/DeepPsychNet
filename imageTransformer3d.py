@@ -72,8 +72,8 @@ class ImageTransformer3d(object):
         else:
             raise RuntimeError('type_augmentation has to be rotations or translation but {} was given'.format(self.type_augmentation))
 
-        data_new = np.zeros(((batch_size, ) + data_to_augment.shape[1:]), dtype=data_to_augment.dtype)
-        affine_new = np.zeros(((batch_size, ) + affine_for_augment.shape[1:]), dtype=affine_for_augment.dtype)
+        data_new = np.zeros(((batch_size, ) + self.data.shape[1:]), dtype=data_to_augment.dtype)
+        affine_new = np.zeros(((batch_size, ) + self.affine.shape[1:]), dtype=affine_for_augment.dtype)
 
         data_new[:num_orig_images] = data_to_augment
         affine_new[:num_orig_images] = affine_for_augment
