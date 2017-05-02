@@ -34,11 +34,14 @@ def bn_act(x, base_name='bn_act', num_layer=1):
     return x
 
 
-def ResNet(kernel_size=(7, 7, 7)):
+def ResNet(kernel_size=(5, 5, 5)):
     input_layer = Input(batch_shape=(None, 91, 109, 91, 1))
 
-    x = conv_bn_act(input_layer, filters=64, kernel_size=kernel_size, padding='valid', base_name='1st', num_layer=1)
-    x = conv_bn_act(x, filters=64, kernel_size=kernel_size, padding='valid', base_name='2nd', num_layer=2)
+    n_filters_conv = 64
+    x = conv_bn_act(input_layer, filters=n_filters_conv, kernel_size=kernel_size, padding='valid', base_name='1st',
+                    num_layer=1)
+    x = conv_bn_act(x, filters=n_filters_conv, kernel_size=kernel_size, padding='valid', base_name='2nd',
+                    num_layer=2)
 
     n_filters_block = 32
     x = Conv3D(filters=n_filters_block, kernel_size=kernel_size, strides=(2, 2, 2), padding='same', name='3rd-conv3')(x)
@@ -58,7 +61,7 @@ def ResNet(kernel_size=(7, 7, 7)):
     add4 = Add(name='add4')([add3, block4])
     x = bn_act(add4, base_name='bn-act', num_layer=2)
 
-    n_filters_block = 64
+    n_filters_block = 32
     x = Conv3D(filters=n_filters_block, kernel_size=kernel_size, strides=(2, 2, 2), padding='same', name='3rd-conv')(x)
     # 3rd block of 2 convolutions/batch-norm/relu followed by addiing of outputs and another block
     block5 = conv_block(x, n_filters_block, 'block5', kernel_size=kernel_size)
