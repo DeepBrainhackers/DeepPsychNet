@@ -55,11 +55,11 @@ def ResNet():
     add4 = Add(name='add4')([add3, block4])
     x = bn_act(add4, base_name='bn-act', num_layer=2)
 
-    x = Conv3D(filters=128, kernel_size=(5, 5, 5), strides=(2, 2, 2), padding='same', name='3rd-conv')(x)
+    x = Conv3D(filters=64, kernel_size=(5, 5, 5), strides=(2, 2, 2), padding='same', name='3rd-conv')(x)
     # 3rd block of 2 convolutions/batch-norm/relu followed by addiing of outputs and another block
-    block5 = conv_block(x, 128, 'block5', kernel_size=(5, 5, 5))
+    block5 = conv_block(x, 64, 'block5', kernel_size=(5, 5, 5))
     add5 = Add(name='add5')([x, block5])
-    block6 = conv_block(add5, 128, 'block6', kernel_size=(5, 5, 5))
+    block6 = conv_block(add5, 64, 'block6', kernel_size=(5, 5, 5))
     add6 = Add(name='add6')([add5, block6])
 
     # Finalizing the network
