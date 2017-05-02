@@ -15,14 +15,24 @@ from resnet_architechture import ResNet
 
 
 def run():
-    hdf5_file = '/home/rthomas/BrainHack/DeepPsychNet/dataHDF5/abide.hdf5'
-    save_folder = '/home/rthomas/BrainHack/DeepPsychNet'
+    hdf5_file = '/home/paulgpu/git/DeepPsychNet/dataHDF5/abide.hdf5'
+    save_folder = '/home/paulgpu/git/DeepPsychNet'
     model_folder = 'lenet3d'
     model_name = 'lenet3d'
-    batch_size = 25
+    batch_size = 20
     num_epochs = 200
     # if 1 no augmentation will be performed. Has to be a multiple of batch_size otherwise
     num_augmentations = 5
+
+    print 'Meta-Parameters: '
+    print 'Data: {}; SaveFolder: {}; ModelFolder: {}; ModelName: {}; BatchSize: {}; NumEpochs: {}; NumAugmentation {}'.format(hdf5_file,
+                                                                                                                              save_folder,
+                                                                                                                              model_folder,
+                                                                                                                              model_name,
+                                                                                                                              batch_size,
+                                                                                                                              num_epochs,
+                                                                                                                              num_augmentations)
+    print
 
     iterate_and_train(hdf5_file_path=hdf5_file, save_path=save_folder, model_folder=model_folder, model_name=model_name,
                       batch_size=batch_size, num_augmentation=num_augmentations, num_epochs=num_epochs)
@@ -120,6 +130,7 @@ def train_network(data, y, affine, id_train, id_valid, id_test, network, save_pa
         t2_epoch = time()
 
         print 'Epoch: time-taken {:.2f}'.format((t2_epoch - t1_epoch)/60.)
+        print
 
     np.savez_compressed(osp.join(model_save, 'metrics_model.npz'), metrics_train=metrics_train,
                         metrics_valid=metrics_valid, metrics_test=metrics_test, metrics_names=network.metrics_names)
