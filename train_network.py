@@ -17,12 +17,12 @@ from resnet_architechture import ResNet
 def run():
     hdf5_file = '/home/paulgpu/git/DeepPsychNet/dataHDF5/abide.hdf5'
     save_folder = '/home/paulgpu/git/DeepPsychNet'
-    model_folder = 'lenet3d'
-    model_name = 'lenet3d'
-    batch_size = 20
+    model_folder = 'ResNet3D'
+    model_name = 'ResNet3D'
+    batch_size = 12
     num_epochs = 200
     # if 1 no augmentation will be performed. Has to be a multiple of batch_size otherwise
-    num_augmentations = 5
+    num_augmentations = 2
 
     print 'Meta-Parameters: '
     print 'Data: {}; SaveFolder: {}; ModelFolder: {}; ModelName: {}; BatchSize: {}; NumEpochs: {}; NumAugmentation {}'.format(hdf5_file,
