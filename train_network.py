@@ -148,13 +148,15 @@ def train_network(data, y, affine, id_train, id_valid, id_test, network, save_pa
         print 'Test: '
         print_metrics(np.nanmean(metrics_test[:, id_epoch, :], axis=0), network.metrics_names)
 
-        network.save(osp.join(model_save, model_name + '_epoch_{}.h5'.format(id_epoch + 1)))
+        test_acc = np.nanmean(metrics_test[:, id_epoch, -1], axis=0) * 100
+        network.save(osp.join(save_path, model_name + '_epoch_{}_test_{}.h5'.format(id_epoch + 1, int(test_acc))))
+        
         t2_epoch = time()
 
         print 'Epoch: time-taken {:.2f}m'.format((t2_epoch - t1_epoch)/60.)
         print
 
-    np.savez_compressed(osp.join(model_save, 'metrics_model.npz'), metrics_train=metrics_train,
+    np.savez_compressed(osp.join(save_path, 'metrics_model.npz'), metrics_train=metrics_train,
                         metrics_valid=metrics_valid, metrics_test=metrics_test, metrics_names=network.metrics_names)
     print 'Model saved!'
 
