@@ -144,8 +144,13 @@ def train_network(data, y, affine, id_train, id_valid, id_test, network, save_pa
         print 'Test: '
         print_metrics(np.nanmean(metrics_test[:, id_epoch, :], axis=0), network.metrics_names)
 
-        test_acc = np.nanmean(metrics_test[:, id_epoch, -1], axis=0) * 100
-        network.save(osp.join(save_path, model_name + '_epoch_{:04}_test_{}.h5'.format(id_epoch + 1, int(test_acc))))
+        # the first two numbers plus the first number after the period
+        test_acc = np.nanmean(metrics_test[:, id_epoch, -1], axis=0) * 1000
+        valid_acc = np.nanmean(metrics_valid[:, id_epoch, -1], axis=0) * 1000
+
+        network.save(osp.join(save_path, model_name + '_epoch_{:04}_valid_{}_test_{}.h5'.format(id_epoch + 1,
+                                                                                                int(valid_acc)
+                                                                                                int(test_acc))))
 
         t2_epoch = time()
 
