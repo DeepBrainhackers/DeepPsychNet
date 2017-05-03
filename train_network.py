@@ -17,7 +17,7 @@ def run():
     hdf5_file = '/home/paulgpu/git/DeepPsychNet/dataHDF5/abide.hdf5'
     save_folder = '/home/paulgpu/git/DeepPsychNet'
 
-    model_name = 'ResNet3D' # currently only available: 'ResNet3D' or 'LeNet3D'
+    model_name = 'LeNet3D' # currently only available: 'ResNet3D' or 'LeNet3D'
     model_folder = model_name
     save_folder = osp.join(save_folder, model_folder)
 
