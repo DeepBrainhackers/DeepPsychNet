@@ -88,14 +88,18 @@ def init_network(n_classes=2):
     conv_params = [
         {'filters': 64, "kernel_size": (7, 7, 7), "strides": (3, 3, 3)},
         {'filters': 32, "kernel_size": (5, 5, 5), "strides": (1, 1, 1)},
+        {'filters': 16, "kernel_size": (3, 3, 3), "strides": (1, 1, 1)}
     ]
     maxpooling_params = [
-        {"pool_size": (2, 2, 2), 'strides': (2, 2, 2)},
-        {"pool_size": (2, 2, 2), 'strides': (2, 2, 2)}
+        {"pool_size": (4, 4, 4), 'strides': (3, 3, 3)},
+        {"pool_size": (2, 2, 2), 'strides': (1, 1, 1)},
+        {"pool_size": (2, 2, 2), 'strides': (1, 1, 1)}
+
     ]
     fc_params = [
         {'units': 1000},
         {'units': 100},
+        {'units': 50}
     ]
 
     output_params = [
