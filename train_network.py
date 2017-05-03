@@ -8,7 +8,7 @@ import numpy as np
 from keras.utils import to_categorical
 
 # from deepPsychNet import DeepPsychNet
-# from deepPsychNet_keras import init_network as get_keras_network
+from deepPsychNet_keras import init_network as get_keras_network
 from imageTransformer3d import ImageTransformer3d
 from time import time
 from resnet_architechture import ResNet
@@ -17,30 +17,37 @@ from resnet_architechture import ResNet
 def run():
     hdf5_file = '/home/paulgpu/git/DeepPsychNet/dataHDF5/abide.hdf5'
     save_folder = '/home/paulgpu/git/DeepPsychNet'
-    model_folder = 'ResNet3D'
-    model_name = 'ResNet3D'
-    batch_size = 12
+
+    model_name = 'ResNet3D' # currently only available: 'ResNet3D' or 'LeNet3D'
+    model_folder = model_name
+
+
+    batch_size = 20
     num_epochs = 200
     # if 1 no augmentation will be performed. Has to be a multiple of batch_size otherwise
-    num_augmentations = 2
+    num_augmentations = 5
+    type_augmentation = 'translation'
 
     print 'Meta-Parameters: '
-    print 'Data: {}; SaveFolder: {}; ModelFolder: {}; ModelName: {}; BatchSize: {}; NumEpochs: {}; NumAugmentation {}'.format(hdf5_file,
-                                                                                                                              save_folder,
-                                                                                                                              model_folder,
-                                                                                                                              model_name,
-                                                                                                                              batch_size,
-                                                                                                                              num_epochs,
-                                                                                                                              num_augmentations)
+    print 'Data: {}; SaveFolder: {}; ModelFolder: {}; ModelName: {}'.format(hdf5_file, save_folder, model_folder,
+                                                                            model_name)
+    print 'BatchSize: {}; NumEpochs: {}; NumAugmentation {}; TypeAugmentation {}'.format(batch_size, num_epochs,
+                                                                                         num_augmentations,
+                                                                                         type_augmentation)
     print
 
     iterate_and_train(hdf5_file_path=hdf5_file, save_path=save_folder, model_folder=model_folder, model_name=model_name,
-                      batch_size=batch_size, num_augmentation=num_augmentations, num_epochs=num_epochs)
+                      batch_size=batch_size, num_augmentation=num_augmentations, type_augmentation=type_augmentation,
+                      num_epochs=num_epochs)
 
 
-def init_network(batch_size=None, n_classes=2):
-    # return get_keras_network(n_classes=n_classes
-    return ResNet()
+def init_network(model_name, n_classes=2):
+    if model_name == 'LeNet3D':
+        return get_keras_network(n_classes=n_classes)
+    elif model_name == 'ResNet3D':
+        return ResNet()
+    else:
+        raise RuntimeError("Currently only 'LeNet3D' and 'ResNet3D' are implemented. You chose {}".format(model_name))
 
 
 def evaluate(data, y_data, id_to_take, network, affine, batch_size=25):
@@ -68,7 +75,7 @@ def evaluate(data, y_data, id_to_take, network, affine, batch_size=25):
 
 
 def train_network(data, y, affine, id_train, id_valid, id_test, network, save_path, model_folder, model_name,
-                  batch_size=25, num_epochs=20, num_augmentation=1):
+                  batch_size=25, num_epochs=20, num_augmentation=1, type_augmentation=None):
 
     num_batches_train = int(np.ceil(id_train.size/(float(batch_size)/num_augmentation)))
     num_batches_train_validation = int(np.ceil(id_train.size/(float(batch_size))))
@@ -95,7 +102,7 @@ def train_network(data, y, affine, id_train, id_valid, id_test, network, save_pa
 
         image_iterator_transformer = ImageTransformer3d(data_obj=data, affine=affine, y_label=y,
                                                         id_data=id_train, batch_size=batch_size,
-                                                        type_augmentation='translation',
+                                                        type_augmentation=type_augmentation,
                                                         num_augmentation_set=num_augmentation, shuffle=True)
         image_generator = image_iterator_transformer.iter()
 
@@ -144,9 +151,9 @@ def print_metrics(metrics_array, metric_names):
     print print_str
 
 
-def iterate_and_train(hdf5_file_path, save_path, model_folder='model', model_name='model.ckpt', batch_size=25,
-                      num_epochs=20, num_augmentation=1):
-    network = init_network()
+def iterate_and_train(hdf5_file_path, save_path, model_folder='model', model_name='LeNet3D', batch_size=25,
+                      num_epochs=20, num_augmentation=1, type_augmentation=None):
+    network = init_network(model_name)
 
     with h5py.File(hdf5_file_path, 'r') as hdf5_file:
         dataT1 = hdf5_file['dataT1']
@@ -154,7 +161,8 @@ def iterate_and_train(hdf5_file_path, save_path, model_folder='model', model_nam
         y_labels = dataT1.attrs['labels_subj'].astype(np.int32)
         id_train, id_valid, id_test = dataT1.attrs['id_train'], dataT1.attrs['id_valid'], dataT1.attrs['id_test']
         train_network(dataT1, y_labels, affine, id_train, id_valid, id_test, network, save_path, model_folder,
-                      model_name, batch_size=batch_size, num_epochs=num_epochs, num_augmentation=num_augmentation)
+                      model_name, batch_size=batch_size, num_epochs=num_epochs, num_augmentation=num_augmentation,
+                      type_augmentation=type_augmentation)
 
 
 if __name__ == '__main__':
