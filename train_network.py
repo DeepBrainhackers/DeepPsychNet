@@ -149,8 +149,8 @@ def train_network(data, y, affine, id_train, id_valid, id_test, network, save_pa
         print_metrics(np.nanmean(metrics_test[:, id_epoch, :], axis=0), network.metrics_names)
 
         test_acc = np.nanmean(metrics_test[:, id_epoch, -1], axis=0) * 100
-        network.save(osp.join(save_path, model_name + '_epoch_{}_test_{}.h5'.format(id_epoch + 1, int(test_acc))))
-        
+        network.save(osp.join(save_path, model_name + '_epoch_{:04}_test_{}.h5'.format(id_epoch + 1, int(test_acc))))
+
         t2_epoch = time()
 
         print 'Epoch: time-taken {:.2f}m'.format((t2_epoch - t1_epoch)/60.)
