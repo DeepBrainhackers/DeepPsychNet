@@ -17,10 +17,9 @@ def run():
     hdf5_file = '/home/paulgpu/git/DeepPsychNet/dataHDF5/abide.hdf5'
     save_folder = '/home/paulgpu/git/DeepPsychNet'
 
-    model_name = 'LeNet3D' # currently only available: 'ResNet3D' or 'LeNet3D'
+    model_name = 'LeNet3D'  # currently only available: 'ResNet3D' or 'LeNet3D'
     model_folder = model_name
     save_folder = osp.join(save_folder, model_folder)
-
 
     batch_size = 25
     num_epochs = 500
@@ -42,9 +41,8 @@ def run():
                      batch_size=batch_size, num_epochs=num_epochs, num_augmentations=num_augmentations,
                      type_augmentation=type_augmentation)
 
-    iterate_and_train(hdf5_file_path=hdf5_file, save_path=save_folder, model_folder=model_folder, model_name=model_name,
-                      batch_size=batch_size, num_augmentation=num_augmentations, type_augmentation=type_augmentation,
-                      num_epochs=num_epochs)
+    iterate_and_train(hdf5_file_path=hdf5_file, save_path=save_folder, model_name=model_name, batch_size=batch_size,
+                      num_augmentation=num_augmentations, type_augmentation=type_augmentation, num_epochs=num_epochs)
 
 
 def save_meta_params(**kwargs):
@@ -92,7 +90,7 @@ def evaluate(data, y_data, id_to_take, network, affine, batch_size=25):
     return metrics_batches
 
 
-def train_network(data, y, affine, id_train, id_valid, id_test, network, save_path, model_folder, model_name,
+def train_network(data, y, affine, id_train, id_valid, id_test, network, save_path, model_name,
                   batch_size=25, num_epochs=20, num_augmentation=1, type_augmentation=None):
 
     num_batches_train = int(np.ceil(id_train.size/(float(batch_size)/num_augmentation)))
@@ -105,8 +103,6 @@ def train_network(data, y, affine, id_train, id_valid, id_test, network, save_pa
     metrics_train = np.zeros((num_batches_train_validation, num_epochs, num_metrics))
     metrics_test = np.zeros((num_batches_test, num_epochs, num_metrics))
     metrics_valid = np.zeros((num_batches_valid, num_epochs, num_metrics))
-
-    model_save = osp.join(save_path, model_folder)
 
     print "Training..."
     print
@@ -168,8 +164,8 @@ def print_metrics(metrics_array, metric_names):
     print print_str
 
 
-def iterate_and_train(hdf5_file_path, save_path, model_folder='model', model_name='LeNet3D', batch_size=25,
-                      num_epochs=20, num_augmentation=1, type_augmentation=None):
+def iterate_and_train(hdf5_file_path, save_path, model_name='LeNet3D', batch_size=25, num_epochs=20,
+                      num_augmentation=1, type_augmentation=None):
     network = init_network(model_name, save_path)
 
     with h5py.File(hdf5_file_path, 'r') as hdf5_file:
@@ -177,8 +173,8 @@ def iterate_and_train(hdf5_file_path, save_path, model_folder='model', model_nam
         affine = hdf5_file['dataAffine']
         y_labels = dataT1.attrs['labels_subj'].astype(np.int32)
         id_train, id_valid, id_test = dataT1.attrs['id_train'], dataT1.attrs['id_valid'], dataT1.attrs['id_test']
-        train_network(dataT1, y_labels, affine, id_train, id_valid, id_test, network, save_path, model_folder,
-                      model_name, batch_size=batch_size, num_epochs=num_epochs, num_augmentation=num_augmentation,
+        train_network(dataT1, y_labels, affine, id_train, id_valid, id_test, network, save_path, model_name,
+                      batch_size=batch_size, num_epochs=num_epochs, num_augmentation=num_augmentation,
                       type_augmentation=type_augmentation)
 
 
