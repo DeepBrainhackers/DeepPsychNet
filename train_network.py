@@ -1,17 +1,16 @@
 import os
+import json
 from sys import stdout
 import os.path as osp
 
 import h5py
 import numpy as np
-# from sklearn.model_selection import train_test_split
 from keras.utils import to_categorical
 
-# from deepPsychNet import DeepPsychNet
-from deepPsychNet_keras import init_network as get_keras_network
+from deepPsychNet_keras import init_network as LeNet3D
 from imageTransformer3d import ImageTransformer3d
 from time import time
-from resnet_architechture import ResNet
+from resnet_architechture import ResNet as ResNet3D
 
 
 def run():
@@ -20,34 +19,53 @@ def run():
 
     model_name = 'ResNet3D' # currently only available: 'ResNet3D' or 'LeNet3D'
     model_folder = model_name
+    save_folder = osp.join(save_folder, model_folder)
 
 
-    batch_size = 20
-    num_epochs = 200
+    batch_size = 25
+    num_epochs = 500
     # if 1 no augmentation will be performed. Has to be a multiple of batch_size otherwise
     num_augmentations = 5
     type_augmentation = 'translation'
 
     print 'Meta-Parameters: '
-    print 'Data: {}; SaveFolder: {}; ModelFolder: {}; ModelName: {}'.format(hdf5_file, save_folder, model_folder,
-                                                                            model_name)
+    print 'Data: {}; SaveFolder: {}; ModelName: {}'.format(hdf5_file, save_folder, model_name)
     print 'BatchSize: {}; NumEpochs: {}; NumAugmentation {}; TypeAugmentation {}'.format(batch_size, num_epochs,
                                                                                          num_augmentations,
                                                                                          type_augmentation)
     print
+
+    if not osp.exists(save_folder):
+        os.makedirs(save_folder)
+
+    save_meta_params(data=hdf5_file, save_folder=save_folder, model_name=model_name, model_folder=model_folder,
+                     batch_size=batch_size, num_epochs=num_epochs, num_augmentations=num_augmentations,
+                     type_augmentation=type_augmentation)
 
     iterate_and_train(hdf5_file_path=hdf5_file, save_path=save_folder, model_folder=model_folder, model_name=model_name,
                       batch_size=batch_size, num_augmentation=num_augmentations, type_augmentation=type_augmentation,
                       num_epochs=num_epochs)
 
 
-def init_network(model_name, n_classes=2):
+def save_meta_params(**kwargs):
+    save_folder = kwargs.get('save_folder', '.')
+
+    with open(osp.join(save_folder, 'meta_params.json'), 'wb') as json_file:
+        json.dump(kwargs, json_file)
+
+
+def init_network(model_name, save_path, n_classes=2):
     if model_name == 'LeNet3D':
-        return get_keras_network(n_classes=n_classes)
+        model = LeNet3D(n_classes=n_classes)
     elif model_name == 'ResNet3D':
-        return ResNet()
+        model = ResNet3D()
     else:
         raise RuntimeError("Currently only 'LeNet3D' and 'ResNet3D' are implemented. You chose {}".format(model_name))
+
+    with open(osp.join(save_path, 'model_architecture.json'), 'wb') as json_file:
+        json.dump(model.to_json(), json_file)
+
+    return model
 
 
 def evaluate(data, y_data, id_to_take, network, affine, batch_size=25):
@@ -89,9 +107,6 @@ def train_network(data, y, affine, id_train, id_valid, id_test, network, save_pa
     metrics_valid = np.zeros((num_batches_valid, num_epochs, num_metrics))
 
     model_save = osp.join(save_path, model_folder)
-
-    if not osp.exists(model_save):
-        os.makedirs(model_save)
 
     print "Training..."
     print
@@ -136,7 +151,7 @@ def train_network(data, y, affine, id_train, id_valid, id_test, network, save_pa
         network.save(osp.join(model_save, model_name + '_epoch_{}.h5'.format(id_epoch + 1)))
         t2_epoch = time()
 
-        print 'Epoch: time-taken {:.2f}'.format((t2_epoch - t1_epoch)/60.)
+        print 'Epoch: time-taken {:.2f}m'.format((t2_epoch - t1_epoch)/60.)
         print
 
     np.savez_compressed(osp.join(model_save, 'metrics_model.npz'), metrics_train=metrics_train,
@@ -153,7 +168,7 @@ def print_metrics(metrics_array, metric_names):
 
 def iterate_and_train(hdf5_file_path, save_path, model_folder='model', model_name='LeNet3D', batch_size=25,
                       num_epochs=20, num_augmentation=1, type_augmentation=None):
-    network = init_network(model_name)
+    network = init_network(model_name, save_path)
 
     with h5py.File(hdf5_file_path, 'r') as hdf5_file:
         dataT1 = hdf5_file['dataT1']
