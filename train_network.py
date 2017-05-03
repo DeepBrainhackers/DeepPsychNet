@@ -149,7 +149,7 @@ def train_network(data, y, affine, id_train, id_valid, id_test, network, save_pa
         valid_acc = np.nanmean(metrics_valid[:, id_epoch, -1], axis=0) * 1000
 
         network.save(osp.join(save_path, model_name + '_epoch_{:04}_valid_{}_test_{}.h5'.format(id_epoch + 1,
-                                                                                                int(valid_acc)
+                                                                                                int(valid_acc),
                                                                                                 int(test_acc))))
 
         t2_epoch = time()
