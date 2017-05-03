@@ -1,6 +1,7 @@
 import numpy as np
 from itertools import product
 from rotate_translate_brain import rotate_brain, shift_brain
+import warnings
 
 class ImageTransformer3d(object):
 
@@ -18,7 +19,18 @@ class ImageTransformer3d(object):
         self.shuffle = shuffle
         self.num_augmentations = num_augmentation_set
         self.affine = affine
-        self.type_augmentation = type_augmentation
+        self.type_augmentation = self.check_augmentation(type_augmentation)
+
+    def check_augmentation(self, type_augmentation):
+        if (self.num_augmentations == 1) and type_augmentation:
+            warnings.warn('WARNING: Number of augmentations is 1 but type of augmentation is not None. '
+                          'It will be set to None!')
+            return None
+        elif type_augmentation in ['translation', 'rotation', None]:
+            return type_augmentation
+        else:
+            raise RuntimeError("Type of augmentation has to be either None, 'translation' or 'rotation'. "
+                               "You chose {}".format(type_augmentation))
 
     def iter(self):
         id_data = self.id_data
