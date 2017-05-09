@@ -116,7 +116,8 @@ def init_network(n_classes=2):
 
     # dropout_params = None
     # dropout_params = {1: 0.9, 2: 0.5}
-    dropout_params = {1: 0.5, 2: 0.3}
+    # dropout_params = {1: 0.5, 2: 0.3}
+    dropout_params = {1: 0.5}
 
     model = deep_psych_net(input_shape, conv_params, maxpooling_params, fc_params, dropout_params, output_params,
                            input_dtype)
