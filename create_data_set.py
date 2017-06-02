@@ -80,12 +80,12 @@ def run(**kwargs):
 
         subj_anonym = mprage_anonym[i_mprage]
         idx_subj = anonym_ids_take == subj_anonym
-        
+
         if not np.any(idx_subj):
             print 'Skipping: {}'.format(subj_anonym)
             continue
 
-        subj_id = subj_ids_take[]
+        subj_id = subj_ids_take[idx_subj]
         subj_dx = df_diag.DX_GROUP[df_diag.SUB_ID == subj_id].values
         assert subj_dx.size == 1, 'Multiple subjects for id {}({})'.format(subj_id, subj_anonym)
         subj_dx = subj_dx[0]
