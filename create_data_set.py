@@ -21,7 +21,7 @@ def get_df_pheno(pheno_path):
 
 def get_ids_from_pheno(df_pheno):
     # first row is somehow just an ABIDE_xx enumeration
-    subj_ids = df_pheno.SubID.values[1:]
+    subj_ids = df_pheno.SubID.values[1:].astype(np.int)
     anon_ids = df_pheno['Unnamed: 0'].values[1:]
     return anon_ids, subj_ids
 
