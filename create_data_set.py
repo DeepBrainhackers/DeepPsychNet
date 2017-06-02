@@ -88,7 +88,8 @@ def run(**kwargs):
         subj_id = subj_ids_take[idx_subj]
         assert subj_id.size == 1, 'Multiple subjects for id {}({})'.format(subj_id, subj_anonym)
 
-        subj_dx = df_diag.DX_GROUP[df_diag.SUB_ID == subj_id[0]].values
+        subj_id = subj_id[0]
+        subj_dx = df_diag.DX_GROUP[df_diag.SUB_ID == subj_id].values
         subj_dx = subj_dx
 
         if subj_dx == CODE_CONTROL:
