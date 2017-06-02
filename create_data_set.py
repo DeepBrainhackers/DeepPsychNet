@@ -86,9 +86,10 @@ def run(**kwargs):
             continue
 
         subj_id = subj_ids_take[idx_subj]
-        subj_dx = df_diag.DX_GROUP[df_diag.SUB_ID == subj_id].values
-        assert subj_dx.size == 1, 'Multiple subjects for id {}({})'.format(subj_id, subj_anonym)
-        subj_dx = subj_dx[0]
+        assert subj_id.size == 1, 'Multiple subjects for id {}({})'.format(subj_id, subj_anonym)
+
+        subj_dx = df_diag.DX_GROUP[df_diag.SUB_ID == subj_id[0]].values
+        subj_dx = subj_dx
 
         if subj_dx == CODE_CONTROL:
             new_file = osp.join(save_folder, 'control', 'con_{}_{}.nii.gz'.format(subj_id, subj_anonym))
