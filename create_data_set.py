@@ -22,7 +22,7 @@ def get_df_pheno(pheno_path):
 def get_ids_from_pheno(df_pheno):
     # first row is somehow just an ABIDE_xx enumeration
     subj_ids = df_pheno.SubID.values[1:].astype(np.int)
-    anon_ids = df_pheno['Unnamed: 0'].values[1:]
+    anon_ids = df_pheno['Unnamed: 0'].values[1:].astype(str)
     return anon_ids, subj_ids
 
 
@@ -79,7 +79,13 @@ def run(**kwargs):
         print '{}/{}'.format(i_mprage + 1, mprage_np.size)
 
         subj_anonym = mprage_anonym[i_mprage]
-        subj_id = subj_ids_take[anonym_ids_take == subj_anonym]
+        idx_subj = anonym_ids_take == subj_anonym
+        
+        if not np.any(idx_subj):
+            print 'Skipping: {}'.format(subj_anonym)
+            continue
+
+        subj_id = subj_ids_take[]
         subj_dx = df_diag.DX_GROUP[df_diag.SUB_ID == subj_id].values
         assert subj_dx.size == 1, 'Multiple subjects for id {}({})'.format(subj_id, subj_anonym)
         subj_dx = subj_dx[0]
