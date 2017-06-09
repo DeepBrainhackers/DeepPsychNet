@@ -41,6 +41,8 @@ class PatchSampler(object):
         center_xyz = img_shape // 2
         cov_xyz = np.diag(2 * (img_shape - patch_size))
         patch_coord = np.random.multivariate_normal(mean=center_xyz, cov=cov_xyz).astype(np.int)
-        patch_coord[patch_coord <= (patch_size // 2)] = patch_size // 2
-        patch_coord[patch_coord > (img_shape - patch_size // 2)] = (img_shape - patch_size // 2)
+        patch_coord[patch_coord <= (patch_size // 2)] = patch_size[patch_coord <= (patch_size // 2)] // 2
+        patch_coord[patch_coord > (img_shape - patch_size // 2)] = (img_shape - patch_size // 2)[patch_coord >
+                                                                                                 (img_shape -
+                                                                                                  patch_size // 2)]
         return patch_coord
