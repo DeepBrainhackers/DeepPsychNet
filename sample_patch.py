@@ -21,6 +21,7 @@ class PatchSampler(object):
         patches = np.zeros(((subject_ids.size * self.patches_per_img, ) + self.patch_size), dtype=np.float)
 
         for i_all, (i_img, i_patch) in enumerate(product(xrange(subject_ids.size), xrange(self.patches_per_img))):
+            print '{}'.format(i_all + 1)
             img = nib.load(glob(osp.join(self.folder_data, '*', '*_{}_*.nii.gz'.format(subject_ids[i_img])))[0])
             patches[i_all, :] = self._sample_patch(img.get_data())
         return patches
@@ -34,6 +35,7 @@ class PatchSampler(object):
                         (y_patch - self.patch_size[1] // 2): (y_patch + self.patch_size[1] // 2),
                         (z_patch - self.patch_size[2] // 2): (z_patch + self.patch_size[2] // 2)]
             perc_zeros = (patch == 0).sum()/float(patch.size)
+        print 'Image sampled'
         return patch
 
     def _create_patch_center(self, img_shape):
