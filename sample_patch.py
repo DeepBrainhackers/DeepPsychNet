@@ -22,7 +22,7 @@ class PatchSampler(object):
 
         for i_all, (i_img, i_patch) in enumerate(product(xrange(subject_ids.size), xrange(self.patches_per_img))):
             img = nib.load(glob(osp.join(self.folder_data, '*', '*_{}_*.nii.gz'.format(subject_ids[i_img])))[0])
-            patches[i_all, :] = self._sample_patch(img)
+            patches[i_all, :] = self._sample_patch(img.get_data())
         return patches
 
     def _sample_patch(self, img):
